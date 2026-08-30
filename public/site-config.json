@@ -14,7 +14,7 @@
       "title": "XD proxy",
       "description": "XDCLUB 专属定制服务入口。",
       "action": "访问服务",
-      "url": "http://custom.xdclub.dpdns.org/"
+      "url": "https://custom.xdclub.dpdns.org/"
     },
     {
       "id": "service-two",
