@@ -1,0 +1,23 @@
+{
+  "name": "xdclub-workers-site",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "test": "node --test tests/worker.test.mjs tests/structure.test.mjs tests/security.test.mjs",
+    "test:wrangler": "node --test tests/wrangler.test.mjs",
+    "test:browser": "playwright test tests/responsive.test.mjs",
+    "check:syntax": "node --check src/worker.js && node --check public/theme-init.js && node --check public/app.js",
+    "check:local": "pnpm run check:syntax && pnpm test && pnpm run test:wrangler",
+    "check": "pnpm run check:local && pnpm run test:browser"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0",
+    "wrangler": "^4.0.0"
+  }
+}

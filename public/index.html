@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="color-scheme" content="dark light">
+    <meta name="theme-color" content="#0d121b" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#f3f5f8" media="(prefers-color-scheme: light)">
+    <meta name="description" content="XDCLUB 私人数字俱乐部与成员专属服务入口。">
+    <link rel="canonical" href="https://xdclub.dpdns.org/">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="/site.webmanifest">
+    <script src="/theme-init.js"></script>
+    <link rel="stylesheet" href="/styles.css">
+    <script type="module" src="/app.js"></script>
+    <title>XDCLUB · Private Digital Club</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+    <span class="top-sentinel" aria-hidden="true"></span>
+
+    <header class="site-header">
+      <a class="brand" href="#home" aria-label="XDclub，返回首页">
+        <span class="brand-mark" aria-hidden="true">
+          <span class="brand-xd">XD</span><span class="brand-club">club</span>
+        </span>
+      </a>
+
+      <div class="header-actions">
+        <nav class="section-nav" aria-label="页面分区">
+          <a href="#home" aria-label="前往第一屏">01</a>
+          <a href="#custom" aria-label="前往第二屏">02</a>
+          <a href="#service-two" aria-label="前往第三屏">03</a>
+          <a href="#service-three" aria-label="前往第四屏">04</a>
+        </nav>
+
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切换到白天模式" aria-pressed="false">
+          <span class="theme-toggle-track" aria-hidden="true">
+            <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" role="img">
+              <circle cx="12" cy="12" r="3.25"></circle>
+              <path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M18.7 5.3l-1.4 1.4M6.7 17.3l-1.4 1.4"></path>
+            </svg>
+            <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" role="img">
+              <path d="M20 15.2A8.4 8.4 0 0 1 8.8 4a8.6 8.6 0 1 0 11.2 11.2Z"></path>
+            </svg>
+            <span class="theme-toggle-thumb"></span>
+          </span>
+        </button>
+      </div>
+    </header>
+
+    <main id="main">
+      <section id="home" class="panel panel-home" aria-labelledby="home-title">
+        <div class="hero-layout">
+          <div class="home-copy" data-reveal>
+            <p class="eyebrow" data-config="home.eyebrow">Private digital club · Est. 2026</p>
+            <h1 id="home-title" class="hero-title">
+              <span data-config="home.titlePrimary">Built for</span>
+              <span class="text-gold" data-config="home.titleAccent">the chosen few.</span>
+            </h1>
+            <p class="hero-description" data-config="home.description">这里放置可自由修改的俱乐部介绍、宣言或欢迎文字。</p>
+          </div>
+          <picture class="hero-art" aria-label="XDclub 原创角色">
+            <source
+              srcset="/assets/oc-character-640.jpg 640w, /assets/oc-character-1024.jpg 1024w"
+              sizes="(max-width: 760px) 100vw, (max-width: 1180px) 52vw, 48vw"
+              type="image/jpeg"
+            >
+            <img
+              class="hero-oc"
+              src="/assets/oc-character-1024.jpg"
+              width="1024"
+              height="1536"
+              alt="XDclub 原创角色"
+              fetchpriority="high"
+              decoding="async"
+            >
+          </picture>
+        </div>
+        <p class="scroll-hint" aria-hidden="true">Scroll to discover</p>
+      </section>
+
+      <section id="custom" class="panel panel-service panel-custom" aria-labelledby="custom-title" data-service-id="custom">
+        <article class="service-content" data-reveal>
+          <p class="eyebrow" data-service-field="eyebrow">Featured service</p>
+          <p class="section-index" aria-hidden="true" data-service-field="index">01</p>
+          <h2 id="custom-title" class="service-title" data-service-field="title">XD Custom</h2>
+          <p class="service-description" data-service-field="description">XDCLUB 专属定制服务入口。</p>
+          <a class="service-link" data-service-field="action" href="http://custom.xdclub.dpdns.org/" target="_blank" rel="noopener noreferrer">访问服务 <span aria-hidden="true">↗</span></a>
+        </article>
+      </section>
+
+      <section id="service-two" class="panel panel-service panel-reserved" aria-labelledby="service-two-title" data-service-id="service-two">
+        <article class="service-content" data-reveal>
+          <p class="eyebrow" data-service-field="eyebrow">Reserved service</p>
+          <p class="section-index" aria-hidden="true" data-service-field="index">02</p>
+          <h2 id="service-two-title" class="service-title" data-service-field="title">即将开放</h2>
+          <p class="service-description" data-service-field="description">为下一项成员服务预留的独立入口。</p>
+          <a class="service-link is-disabled" data-service-field="action" aria-disabled="true">即将开放</a>
+        </article>
+      </section>
+
+      <section id="service-three" class="panel panel-service panel-reserved panel-final" aria-labelledby="service-three-title" data-service-id="service-three">
+        <article class="service-content" data-reveal>
+          <p class="eyebrow" data-service-field="eyebrow">Reserved service</p>
+          <p class="section-index" aria-hidden="true" data-service-field="index">03</p>
+          <h2 id="service-three-title" class="service-title" data-service-field="title">即将开放</h2>
+          <p class="service-description" data-service-field="description">为未来扩展预留的独立入口。</p>
+          <a class="service-link is-disabled" data-service-field="action" aria-disabled="true">即将开放</a>
+        </article>
+
+        <footer class="site-footer">
+          <span data-config="footer.copyright">© 2026 XDCLUB</span>
+          <a href="https://xdclub.dpdns.org/" data-config-link="footer.siteUrl" data-config="footer.siteUrl">xdclub.dpdns.org</a>
+          <a href="#home">返回顶部 <span aria-hidden="true">↑</span></a>
+        </footer>
+      </section>
+    </main>
+
+    <noscript>
+      <p class="noscript-note">JavaScript 已关闭：默认内容仍然可用，但主题切换与配置更新不会运行。</p>
+    </noscript>
+  </body>
+</html>

@@ -1,0 +1,42 @@
+{
+  "brand": "XDCLUB",
+  "home": {
+    "eyebrow": "Private digital club · Est. 2026",
+    "titlePrimary": "Built for",
+    "titleAccent": "the chosen few.",
+    "description": "这里放置可自由修改的俱乐部介绍、宣言或欢迎文字。"
+  },
+  "services": [
+    {
+      "id": "custom",
+      "index": "01",
+      "eyebrow": "Featured service",
+      "title": "XD Custom",
+      "description": "XDCLUB 专属定制服务入口。",
+      "action": "访问服务",
+      "url": "http://custom.xdclub.dpdns.org/"
+    },
+    {
+      "id": "service-two",
+      "index": "02",
+      "eyebrow": "Reserved service",
+      "title": "即将开放",
+      "description": "为下一项成员服务预留的独立入口。",
+      "action": "即将开放",
+      "url": null
+    },
+    {
+      "id": "service-three",
+      "index": "03",
+      "eyebrow": "Reserved service",
+      "title": "即将开放",
+      "description": "为未来扩展预留的独立入口。",
+      "action": "即将开放",
+      "url": null
+    }
+  ],
+  "footer": {
+    "copyright": "© 2026 XDCLUB",
+    "siteUrl": "https://xdclub.dpdns.org/"
+  }
+}

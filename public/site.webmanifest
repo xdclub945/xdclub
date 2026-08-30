@@ -1,0 +1,17 @@
+{
+  "name": "XDCLUB",
+  "short_name": "XDCLUB",
+  "description": "XDCLUB 私人数字俱乐部",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d121b",
+  "theme_color": "#0d121b",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
