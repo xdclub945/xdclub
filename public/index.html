@@ -46,6 +46,7 @@
       <a href="#service-one" aria-label="前往第二屏">02</a>
       <a href="#service-two" aria-label="前往第三屏">03</a>
       <a href="#service-three" aria-label="前往第四屏">04</a>
+      <a href="#surprise" aria-label="前往第五屏">05</a>
     </nav>
 
     <main id="main">
@@ -107,7 +108,7 @@
         </article>
       </section>
 
-      <section id="service-three" class="panel panel-service panel-reserved panel-final" aria-labelledby="service-three-title" data-service-id="service-three">
+      <section id="service-three" class="panel panel-service panel-reserved" aria-labelledby="service-three-title" data-service-id="service-three">
         <picture class="service-art" aria-hidden="true">
           <source srcset="/assets/service-three-640.jpg?v=1459069044dd 640w, /assets/service-three-1024.jpg?v=1459069044dd 1024w" sizes="(max-width: 760px) 100vw, 52vw" type="image/jpeg">
           <img class="service-oc" src="/assets/service-three-1024.jpg?v=1459069044dd" width="1024" height="1536" alt="" loading="lazy" decoding="async">
@@ -132,14 +133,36 @@
           </div>
         </article>
 
+      </section>
+
+      <section id="surprise" class="panel panel-service panel-surprise panel-final" aria-labelledby="surprise-title">
+        <picture class="service-art" aria-hidden="true">
+          <source srcset="/assets/surprise-panel-640.jpg?v=600787abe52a 640w, /assets/surprise-panel-1024.jpg?v=600787abe52a 1024w" sizes="(max-width: 760px) 100vw, 52vw" type="image/jpeg">
+          <img class="service-oc" src="/assets/surprise-panel-1024.jpg?v=600787abe52a" width="1024" height="1536" alt="" loading="lazy" decoding="async">
+        </picture>
+        <article class="service-content surprise-content" data-reveal>
+          <h2 id="surprise-title" class="service-title">好东西哦：）</h2>
+          <button class="service-link surprise-trigger" type="button" data-open-tac aria-haspopup="dialog" aria-controls="tac-preview">tac</button>
+        </article>
+
         <footer class="site-footer">
           <span data-config="footer.copyright">© 2026 XDCLUB</span>
         </footer>
       </section>
     </main>
 
+    <dialog id="tac-preview" class="tac-preview-dialog" aria-label="tac 图片预览">
+      <div class="tac-preview-frame">
+        <picture>
+          <source srcset="/assets/tac-preview-640.jpg?v=400d96393a1d 640w, /assets/tac-preview-873.jpg?v=400d96393a1d 873w" sizes="(max-width: 760px) calc(100vw - 32px), 48vw" type="image/jpeg">
+          <img class="tac-preview-image" src="/assets/tac-preview-873.jpg?v=400d96393a1d" width="873" height="1920" alt="tac 图片预览" loading="lazy" decoding="async">
+        </picture>
+        <button class="tac-preview-close" type="button" data-close-tac aria-label="关闭图片预览">×</button>
+      </div>
+    </dialog>
+
     <noscript>
-      <p class="noscript-note">JavaScript 已关闭：默认内容仍然可用，但主题切换与配置更新不会运行。</p>
+      <p class="noscript-note">JavaScript 已关闭：默认内容仍然可用，但主题切换、配置更新与图片预览不会运行。</p>
     </noscript>
   </body>
 </html>

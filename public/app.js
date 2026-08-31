@@ -241,6 +241,24 @@ function setupServerCopy() {
   });
 }
 
+function setupTacPreview() {
+  const dialog = document.querySelector("#tac-preview");
+  const openButton = document.querySelector("[data-open-tac]");
+  const closeButton = document.querySelector("[data-close-tac]");
+  if (!dialog || !openButton || !closeButton) return;
+
+  openButton.addEventListener("click", () => {
+    if (dialog.open) return;
+    if (typeof dialog.showModal === "function") dialog.showModal();
+    else dialog.setAttribute("open", "");
+  });
+
+  closeButton.addEventListener("click", () => {
+    if (typeof dialog.close === "function") dialog.close();
+    else dialog.removeAttribute("open");
+  });
+}
+
 function start() {
   const root = document.documentElement;
   const button = document.querySelector("#theme-toggle");
@@ -274,6 +292,7 @@ function start() {
 
   setupViewportEffects();
   setupServerCopy();
+  setupTacPreview();
   loadConfig(window.fetch.bind(window), document);
 }
 

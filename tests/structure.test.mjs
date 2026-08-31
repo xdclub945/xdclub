@@ -12,15 +12,30 @@ async function readRequired(path) {
   }
 }
 
-test("four ordered full-screen sections use the service-one identifier", async () => {
+test("five ordered full-screen sections keep existing identifiers and append the surprise panel", async () => {
   const html = await readRequired("public/index.html");
   const panels = [...html.matchAll(/<section\b[^>]*\bclass="[^"]*\bpanel\b[^"]*"[^>]*\bid="([^"]+)"|<section\b[^>]*\bid="([^"]+)"[^>]*\bclass="[^"]*\bpanel\b[^"]*"/g)]
     .map((match) => match[1] ?? match[2]);
 
-  assert.deepEqual(panels, ["home", "service-one", "service-two", "service-three"]);
+  assert.deepEqual(panels, ["home", "service-one", "service-two", "service-three", "surprise"]);
   assert.doesNotMatch(html, /(?:id|href|data-service-id)=["']#?custom["']/);
   assert.match(html, /<footer\b/);
-  assert.ok(html.indexOf("<footer") > html.indexOf('id="service-three"'));
+  assert.ok(html.indexOf("<footer") > html.indexOf('id="surprise"'));
+});
+
+test("surprise panel opens a local proportional image in an accessible modal", async () => {
+  const html = await readRequired("public/index.html");
+  const start = html.indexOf('<section id="surprise"');
+  const section = html.slice(start, html.indexOf("</section>", start));
+
+  assert.notEqual(start, -1, "surprise section should exist");
+  assert.match(section, /<h2\b[^>]*>好东西哦：）<\/h2>/);
+  assert.doesNotMatch(section, /class="(?:service-)?description"/);
+  assert.match(section, /srcset="\/assets\/surprise-panel-640\.jpg\?v=600787abe52a 640w, \/assets\/surprise-panel-1024\.jpg\?v=600787abe52a 1024w"/);
+  assert.match(section, /<button\b[^>]*data-open-tac[^>]*aria-haspopup="dialog"[^>]*aria-controls="tac-preview"[^>]*>\s*tac\s*<\/button>/);
+  assert.match(html, /<dialog\b[^>]*id="tac-preview"[^>]*aria-label="tac 图片预览"/);
+  assert.match(html, /<img\b[^>]*class="tac-preview-image"[^>]*src="\/assets\/tac-preview-873\.jpg\?v=400d96393a1d"[^>]*width="873"[^>]*height="1920"[^>]*alt="tac 图片预览"/);
+  assert.match(html, /<button\b[^>]*data-close-tac[^>]*aria-label="关闭图片预览"[^>]*>\s*×\s*<\/button>/);
 });
 
 test("header brand returns home while navigation is exposed as a separate side rail", async () => {
@@ -422,5 +437,23 @@ test("service OC sources retain their provenance and bounded JPEG deliveries", a
     assert.ok(mobile.length < source.length, `${service} 640px delivery should be smaller than its source`);
     assert.ok(mobile.length < 350_000, `${service} 640px delivery should stay below 350 KB`);
     assert.ok(desktop.length < 350_000, `${service} 1024px delivery should stay below 350 KB`);
+  }
+});
+
+test("surprise panel and tac preview preserve the supplied local sources", async () => {
+  const [panelSource, panelMobile, panelDesktop, previewSource, previewMobile, previewDesktop] = await Promise.all([
+    readFile("assets/source/surprise-panel-original.png"),
+    readFile("public/assets/surprise-panel-640.jpg"),
+    readFile("public/assets/surprise-panel-1024.jpg"),
+    readFile("assets/source/tac-preview-original.jpg"),
+    readFile("public/assets/tac-preview-640.jpg"),
+    readFile("public/assets/tac-preview-873.jpg"),
+  ]);
+
+  assert.equal(createHash("sha256").update(panelSource).digest("hex"), "600787abe52ab411fb8c9c47dc90ced4caa95a249ebd1168d00e69a82d162e5e");
+  assert.equal(createHash("sha256").update(previewSource).digest("hex"), "400d96393a1df8bc9c4ffab44963b11ea003d2b4de590e2178fc02867c880237");
+  for (const image of [panelMobile, panelDesktop, previewMobile, previewDesktop]) {
+    assert.deepEqual([...image.subarray(0, 3)], [0xff, 0xd8, 0xff]);
+    assert.ok(image.length < 350_000, "delivery images should stay below 350 KB");
   }
 });

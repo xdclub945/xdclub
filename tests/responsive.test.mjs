@@ -51,7 +51,7 @@ async function floatingHeaderMetrics(page) {
 }
 
 for (const viewport of viewports) {
-  test(`four-section layout and OC art fit ${viewport.width}x${viewport.height}`, async ({ page }) => {
+  test(`five-section layout and OC art fit ${viewport.width}x${viewport.height}`, async ({ page }) => {
     const runtimeErrors = [];
     page.on("pageerror", (error) => runtimeErrors.push(error.message));
     page.on("console", (message) => {
@@ -66,7 +66,7 @@ for (const viewport of viewports) {
     await expect(page.locator("body")).toHaveCSS("overflow-x", "clip");
 
     expect(response?.status()).toBe(200);
-    await expect(page.locator(".panel")).toHaveCount(4);
+    await expect(page.locator(".panel")).toHaveCount(5);
 
     const layout = await page.evaluate(() => {
       const rect = (selector) => {
@@ -116,6 +116,7 @@ for (const viewport of viewports) {
         { id: "service-one", art: "#service-one .service-art", image: "#service-one .service-oc", content: "#service-one .service-content", paths: ["/assets/service-one-640.jpg", "/assets/service-one-1024.jpg"] },
         { id: "service-two", art: "#service-two .service-art", image: "#service-two .service-oc", content: "#service-two .service-content", paths: ["/assets/service-two-640.jpg", "/assets/service-two-1024.jpg"] },
         { id: "service-three", art: "#service-three .service-art", image: "#service-three .service-oc", content: "#service-three .service-content", paths: ["/assets/service-three-640.jpg", "/assets/service-three-1024.jpg"] },
+        { id: "surprise", art: "#surprise .service-art", image: "#surprise .service-oc", content: "#surprise .service-content", paths: ["/assets/surprise-panel-640.jpg", "/assets/surprise-panel-1024.jpg"] },
       ];
       const overlap = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left))
         * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
@@ -155,7 +156,7 @@ for (const viewport of viewports) {
       }));
     });
 
-    expect(artwork).toHaveLength(4);
+    expect(artwork).toHaveLength(5);
     for (const layer of artwork) {
       expect(layer.naturalRatio).toBeCloseTo(2 / 3, 3);
       const currentUrl = new URL(layer.currentSrc);
@@ -181,7 +182,7 @@ for (const viewport of viewports) {
     }
 
     const header = page.locator(".site-header");
-    for (const serviceId of ["service-one", "service-two", "service-three"]) {
+    for (const serviceId of ["service-one", "service-two", "service-three", "surprise"]) {
       await page.locator(`#${serviceId}`).evaluate((panel) => panel.scrollIntoView({ block: "start" }));
       await expect(header).toHaveClass(/is-floating/);
       await expect.poll(() => header.evaluate((node) => getComputedStyle(node).borderRadius)).toBe("26px");
@@ -213,7 +214,7 @@ for (const viewport of viewports) {
       await page.screenshot({ path: `test-results/oc-review/${reviewKey}-floating-light.png`, fullPage: false });
     }
 
-    await page.locator("#service-three").scrollIntoViewIfNeeded();
+    await page.locator("#surprise").scrollIntoViewIfNeeded();
     await expect(page.locator("footer")).toBeVisible();
     await expect(page.locator("#service-three [data-service-preview]")).toBeVisible();
     await expect(page.locator("#service-three [data-service-field=action]")).toHaveCount(0);
@@ -420,7 +421,7 @@ test("right-side page controls center each service without enabling scroll snap"
     await page.setViewportSize(viewport);
     await page.goto("/");
 
-    for (const serviceId of ["service-one", "service-two", "service-three"]) {
+    for (const serviceId of ["service-one", "service-two", "service-three", "surprise"]) {
       await page.locator(`.section-nav a[href="#${serviceId}"]`).click();
       await expect.poll(() => page.evaluate(() => location.hash)).toBe(`#${serviceId}`);
       await expect.poll(() => page.locator(`#${serviceId}`).evaluate((panel) => {
@@ -537,7 +538,7 @@ test("short landscape keeps service titles and primary information in the viewpo
   await page.setViewportSize({ width: 844, height: 390 });
   await page.goto("/");
 
-  for (const serviceId of ["service-one", "service-two", "service-three"]) {
+  for (const serviceId of ["service-one", "service-two", "service-three", "surprise"]) {
     await page.evaluate((id) => scrollTo({ top: document.querySelector(`#${id}`).offsetTop, behavior: "instant" }), serviceId);
     await expect(page.locator(".site-header")).toHaveClass(/is-floating/);
     const layout = await page.locator(`#${serviceId}`).evaluate((panel) => {
@@ -552,7 +553,7 @@ test("short landscape keeps service titles and primary information in the viewpo
       };
     });
 
-    expect(layout.titleLines).toBeLessThanOrEqual(serviceId === "service-three" ? 2.2 : 1.2);
+    expect(layout.titleLines).toBeLessThanOrEqual(["service-three", "surprise"].includes(serviceId) ? 2.2 : 1.2);
     expect(layout.primaryTop).toBeGreaterThanOrEqual(52);
     expect(layout.primaryBottom).toBeLessThanOrEqual(390);
   }
@@ -602,6 +603,54 @@ test("reduced motion keeps reveal content visible", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("[data-reveal]").first()).toBeVisible();
   expect(await page.locator("[data-reveal]").first().evaluate((node) => getComputedStyle(node).transform)).toBe("none");
+});
+
+test("tac opens a prominent proportional preview and closes from the button or Escape", async ({ page }) => {
+  for (const viewport of [{ width: 390, height: 844 }, { width: 1366, height: 768 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/");
+    await page.locator('.section-nav a[href="#surprise"]').click();
+
+    await expect(page.locator("#surprise h2")).toHaveText("好东西哦：）");
+    const trigger = page.locator("[data-open-tac]");
+    await expect(trigger).toBeVisible();
+    await trigger.click();
+
+    const dialog = page.locator("#tac-preview");
+    const image = page.locator(".tac-preview-image");
+    const close = page.locator("[data-close-tac]");
+    await expect(dialog).toHaveJSProperty("open", true);
+    await expect(image).toBeVisible();
+    await expect(close).toBeVisible();
+    await expect(close).toHaveAccessibleName("关闭图片预览");
+
+    const layout = await dialog.evaluate((node) => {
+      const image = node.querySelector(".tac-preview-image");
+      const close = node.querySelector("[data-close-tac]");
+      const imageRect = image.getBoundingClientRect();
+      const closeRect = close.getBoundingClientRect();
+      return {
+        imageRatio: imageRect.width / imageRect.height,
+        naturalRatio: image.naturalWidth / image.naturalHeight,
+        imageInsideViewport: imageRect.left >= 0 && imageRect.right <= innerWidth && imageRect.top >= 0 && imageRect.bottom <= innerHeight,
+        closeBelowImage: closeRect.top >= imageRect.bottom,
+        closeSize: Math.min(closeRect.width, closeRect.height),
+        backdrop: getComputedStyle(node, "::backdrop").backgroundColor,
+      };
+    });
+    expect(layout.imageRatio).toBeCloseTo(873 / 1920, 3);
+    expect(layout.naturalRatio).toBeCloseTo(873 / 1920, 3);
+    expect(layout.imageInsideViewport).toBe(true);
+    expect(layout.closeBelowImage).toBe(true);
+    expect(layout.closeSize).toBeGreaterThanOrEqual(44);
+    expect(layout.backdrop).not.toBe("rgba(0, 0, 0, 0)");
+
+    await close.click();
+    await expect(dialog).toHaveJSProperty("open", false);
+    await trigger.click();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveJSProperty("open", false);
+  }
 });
 
 test("Worker serves expected MIME and security headers including branded 404", async ({ request }) => {

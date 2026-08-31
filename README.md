@@ -1,6 +1,6 @@
 # XDCLUB
 
-XDCLUB 私人俱乐部官网。一个可直接部署到 Cloudflare Workers Static Assets 的单页网站，包含四个纵向全屏分区、月光蓝灰浅色/深色主题、两个服务外链、一个 Minecraft 信息卡和精简页脚。
+XDCLUB 私人俱乐部官网。一个可直接部署到 Cloudflare Workers Static Assets 的单页网站，包含五个纵向全屏分区、月光蓝灰浅色/深色主题、两个服务外链、一个 Minecraft 信息卡、一个本地图片预览入口和精简页脚。
 
 正式地址：<https://xdclub.dpdns.org/>
 
@@ -13,19 +13,23 @@ XDCLUB 私人俱乐部官网。一个可直接部署到 Cloudflare Workers Stati
 - `services[0]`：`id` 必须保持为 `service-one`；它控制第二屏 XD Proxy 的文字和入口，目前指向 `https://custom.xdclub.dpdns.org/`。
 - `services[1]`：第三屏 OOPZ 语音入口，目前指向 `https://oopz.cn/i/By3GmC`。
 - `services[2]`：第四屏 Minecraft 信息预览，不是链接。修改 `preview.label` 和 `preview.value` 即可更换标签与服务器地址；当前正式地址为 `mc.xdclub.dpdns.org`。
+- 第五屏“好东西哦：）”与 `tac` 按钮直接保存在 [`public/index.html`](public/index.html)；点击后使用浏览器原生对话框打开本地图片，支持底部关闭按钮和 `Escape`。
 - `footer.copyright`：页脚只显示版权文字，不包含网址或返回顶部链接。
 
 所有配置文字都通过 `textContent` 写入；服务 URL 仅接受绝对 `http:` 或 `https:` 地址。配置文件不可用时，HTML 内置默认内容仍会显示。
 
 首页两行标题之间的间距由 [`public/styles.css`](public/styles.css) 中 `.hero-title` 的 `row-gap` 控制。
 
-四屏 OC 的可替换边界如下：
+五屏 OC 的可替换边界如下：
 
 - 首页：[`assets/source/oc-character-original.png`](assets/source/oc-character-original.png) → `public/assets/oc-character-{640,1024}.jpg`。
 - 第二屏：[`assets/source/service-one-original.png`](assets/source/service-one-original.png) → `public/assets/service-one-{640,1024}.jpg`。
 - 第三屏：[`assets/source/service-two-original.png`](assets/source/service-two-original.png) → `public/assets/service-two-{640,1024}.jpg`。
 - 第四屏：[`assets/source/service-three-original.png`](assets/source/service-three-original.png) → `public/assets/service-three-{640,1024}.jpg`。
+- 第五屏：[`assets/source/surprise-panel-original.png`](assets/source/surprise-panel-original.png) → `public/assets/surprise-panel-{640,1024}.jpg`。
 - 替换任一 OC 时，必须从对应新原图重新生成 640×960 与 1024×1536 的 JPEG，并保持 HTML 既有的 2:3 标记尺寸；若有意改变比例，须同时更新标记尺寸与响应式视觉验证。
+
+`tac` 预览源图保存在 [`assets/source/tac-preview-original.jpg`](assets/source/tac-preview-original.jpg)，网页使用 `public/assets/tac-preview-{640,873}.jpg`。预览图按原比例完整显示，不使用 `cover` 裁切。
 
 ## 本地运行
 
