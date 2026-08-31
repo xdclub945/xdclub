@@ -126,6 +126,11 @@ export function applyConfig(root, config) {
     for (const service of config.services) applyService(root, service);
   }
 
+  if (config.surprise && typeof config.surprise === "object") {
+    setText(root, '[data-config="surprise.title"]', config.surprise.title);
+    setText(root, '[data-config="surprise.button"]', config.surprise.button);
+  }
+
   if (config.footer && typeof config.footer === "object") {
     setText(root, '[data-config="footer.copyright"]', config.footer.copyright);
   }

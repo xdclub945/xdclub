@@ -29,10 +29,10 @@ test("surprise panel opens a local proportional image in an accessible modal", a
   const section = html.slice(start, html.indexOf("</section>", start));
 
   assert.notEqual(start, -1, "surprise section should exist");
-  assert.match(section, /<h2\b[^>]*>好东西哦：）<\/h2>/);
+  assert.match(section, /<h2\b[^>]*data-config="surprise\.title"[^>]*>好东西哦：）<\/h2>/);
   assert.doesNotMatch(section, /class="(?:service-)?description"/);
   assert.match(section, /srcset="\/assets\/surprise-panel-640\.jpg\?v=600787abe52a 640w, \/assets\/surprise-panel-1024\.jpg\?v=600787abe52a 1024w"/);
-  assert.match(section, /<button\b[^>]*data-open-tac[^>]*aria-haspopup="dialog"[^>]*aria-controls="tac-preview"[^>]*>\s*tac\s*<\/button>/);
+  assert.match(section, /<button\b[^>]*data-config="surprise\.button"[^>]*data-open-tac[^>]*aria-haspopup="dialog"[^>]*aria-controls="tac-preview"[^>]*>\s*背景梦男\s*<\/button>/);
   assert.match(html, /<dialog\b[^>]*id="tac-preview"[^>]*aria-label="tac 图片预览"/);
   assert.match(html, /<img\b[^>]*class="tac-preview-image"[^>]*src="\/assets\/tac-preview-873\.jpg\?v=400d96393a1d"[^>]*width="873"[^>]*height="1920"[^>]*alt="tac 图片预览"/);
   assert.match(html, /<button\b[^>]*data-close-tac[^>]*aria-label="关闭图片预览"[^>]*>\s*×\s*<\/button>/);
@@ -81,6 +81,10 @@ test("configuration preserves custom content in the latest service schema", asyn
     description: "专为电竞玩家打造的综合服务站点",
   });
   assert.deepEqual(config.services.map(({ id }) => id), ["service-one", "service-two", "service-three"]);
+  assert.deepEqual(config.surprise, {
+    title: "好东西哦：）",
+    button: "背景梦男",
+  });
   assert.deepEqual(config.services[0], {
     id: "service-one",
     index: "01",
@@ -324,6 +328,30 @@ test("custom brand updates visible split text and accessible name through safe s
   assert.equal(xd.textContent, "No");
   assert.equal(club.textContent, "va");
   assert.equal(attributes.get("aria-label"), "Nova，返回首页");
+});
+
+test("surprise configuration updates the current custom title and button text", async () => {
+  const { applyConfig } = await import("../public/app.js");
+  const title = { textContent: "默认标题" };
+  const button = { textContent: "默认按钮" };
+  const fields = new Map([
+    ['[data-config="surprise.title"]', [title]],
+    ['[data-config="surprise.button"]', [button]],
+  ]);
+  const root = {
+    querySelectorAll: (selector) => fields.get(selector) ?? [],
+    querySelector: () => null,
+  };
+
+  applyConfig(root, {
+    surprise: {
+      title: "新的标题",
+      button: "新的按钮",
+    },
+  });
+
+  assert.equal(title.textContent, "新的标题");
+  assert.equal(button.textContent, "新的按钮");
 });
 
 test("Minecraft preview configuration updates the address without creating a link", async () => {

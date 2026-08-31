@@ -7,7 +7,7 @@
 ## 红绿灯结论
 
 - 🟢 语法、Node/Worker、真实 Wrangler、系统 Chrome/Playwright、依赖高危审计、Worker dry-run、Git 完整性和资源来源检查均通过。
-- 🟢 远端 `main` 的自定义品牌、首页文案、XD Proxy、OOPZ 与 404 文案已原样迁移到最新配置结构；两个服务入口均为 HTTPS。
+- 🟢 远端 `main` 的自定义品牌、首页文案、XD Proxy、OOPZ、第五屏按钮“背景梦男”与 404 文案已原样迁移到最新配置结构；两个服务入口均为 HTTPS。
 - 🔴 未发现阻止交付的错误、恶意代码、危险 DOM sink、硬编码密钥、远程脚本、水平溢出或已知高危依赖漏洞。
 
 ## 最终实际执行结果
@@ -16,15 +16,15 @@
 | --- | --- |
 | `pnpm install --frozen-lockfile` | 通过；锁文件未变更，未新增依赖。 |
 | `pnpm run check:syntax` | 通过；`src/worker.js`、`public/theme-init.js`、`public/app.js` 均通过 `node --check`。 |
-| `pnpm test` | 39/39 通过。 |
+| `pnpm test` | 40/40 通过。 |
 | `pnpm run test:wrangler` | 1/1 通过。 |
-| `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" pnpm run test:browser` | 40/40 通过；未启用截图标志。 |
-| `OC_REVIEW_SCREENSHOTS=1 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" pnpm run test:browser` | 本次未启用截图标志；完整回归不会写入截图。第五屏和预览层另以本地可见浏览器审阅。 |
+| `pnpm run test:browser`（使用系统 Chrome） | 40/40 通过；未启用截图标志。 |
+| `OC_REVIEW_SCREENSHOTS=1 pnpm run test:browser` | 本次未启用截图标志；完整回归不会写入截图。第五屏和预览层另以本地可见浏览器审阅。 |
 | `pnpm audit --audit-level=high` | `No known vulnerabilities found`。 |
 | `pnpm exec wrangler deploy --dry-run` | 通过；Wrangler 读取 26 个静态资产条目并识别 `env.ASSETS`，未部署。 |
 | `git diff --check` / `git fsck --full --no-dangling` | 通过。 |
 
-本次命令使用 Codex 捆绑 Node 24.19.0、pnpm 11.19.0、Wrangler 4.127.1、`compatibility_date` `2026-08-28` 和系统 Chrome 151.0.7922.174。Wrangler 的版本查询与 dry-run 使用项目内日志路径，避免把沙箱外日志目录权限告警误判为 Worker 错误。
+本次命令使用 Node 24.19.0、pnpm 11.19.0、Wrangler 4.127.1、`compatibility_date` `2026-08-28` 和系统 Chrome 151.0.7922.174。
 
 ## 响应式、交互和内容验证
 
@@ -41,7 +41,7 @@
 - 滚动超过 20px 后页头进入 26px 圆角、52px 高的悬浮状态；返回顶部后合并，且无 IntersectionObserver 时仍可工作。
 - 页头不覆盖可见文案；844×390 短横屏的服务标题、入口按钮和 Minecraft 信息卡仍位于视口内。
 - XD Proxy 入口为有背景、有边框、至少 46px 高且有足够横向内边距的显眼按钮；OOPZ 入口使用同一安全链接行为，Minecraft 卡片不生成链接。
-- 第五屏 `tac` 使用原生模态对话框；P2 保持 873×1920 比例完整显示，背景遮罩非透明，底部关闭按钮至少 44px，并支持点击关闭与 `Escape`。
+- 第五屏图片预览按钮使用 `surprise` 配置和原生模态对话框；当前自定义文字“背景梦男”被保留。P2 保持 873×1920 比例完整显示，背景遮罩非透明，底部关闭按钮至少 44px，并支持点击关闭与 `Escape`。
 - `service-one` 标识、两项自定义服务、Minecraft 正式地址与复制按钮、版权-only 页脚、自定义 404、配置请求失败/禁用 JavaScript 兜底、主题持久化、键盘跳转、文字上浮与减少动画、404/405、MIME 和安全响应头均符合约定。
 
 ## 人工视觉审阅
@@ -64,7 +64,7 @@
 
 ## 安全与较窄审计范围
 
-安全测试覆盖 URL 协议白名单、`textContent` 配置写入、危险 DOM sink/动态执行、调试输出、密钥特征、内联执行钩子、远程导入、CSP、COOP、CORP、HSTS、Referrer Policy、Permissions Policy、MIME 防嗅探、404/405 和资源缓存策略。额外的跟踪文件扫描未发现常见令牌或私钥特征；仅历史实施计划保留了当时的本机临时输入路径，用于可审计的来源记录，不会进入 Worker 静态目录。
+安全测试覆盖 URL 协议白名单、`textContent` 配置写入、危险 DOM sink/动态执行、调试输出、密钥特征、内联执行钩子、远程导入、CSP、COOP、CORP、HSTS、Referrer Policy、Permissions Policy、MIME 防嗅探、404/405 和资源缓存策略。额外的跟踪文件扫描未发现常见令牌或私钥特征；本机环境信息不会进入 Worker 静态目录。
 
 `command -v lighthouse` 未找到 Lighthouse CLI，因此没有安装额外依赖，也没有生成或声称 Lighthouse 分数；现有测试不等同于 Lighthouse。
 
