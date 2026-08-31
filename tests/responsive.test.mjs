@@ -184,7 +184,7 @@ for (const viewport of viewports) {
     for (const serviceId of ["service-one", "service-two", "service-three"]) {
       await page.locator(`#${serviceId}`).evaluate((panel) => panel.scrollIntoView({ block: "start" }));
       await expect(header).toHaveClass(/is-floating/);
-      await expect.poll(() => header.evaluate((node) => getComputedStyle(node).borderRadius)).toBe("22px");
+      await expect.poll(() => header.evaluate((node) => getComputedStyle(node).borderRadius)).toBe("26px");
       const floating = await page.evaluate((id) => {
         const headerRect = document.querySelector(".site-header").getBoundingClientRect();
         const contentRect = document.querySelector(`#${id} .service-content`).getBoundingClientRect();
@@ -209,7 +209,7 @@ for (const viewport of viewports) {
       await page.screenshot({ path: `test-results/oc-review/${reviewKey}-top-light.png`, fullPage: false });
       await page.locator("#service-one").scrollIntoViewIfNeeded();
       await expect(header).toHaveClass(/is-floating/);
-      await expect.poll(() => header.evaluate((node) => getComputedStyle(node).borderRadius)).toBe("22px");
+      await expect.poll(() => header.evaluate((node) => getComputedStyle(node).borderRadius)).toBe("26px");
       await page.screenshot({ path: `test-results/oc-review/${reviewKey}-floating-light.png`, fullPage: false });
     }
 
@@ -221,7 +221,7 @@ for (const viewport of viewports) {
   });
 }
 
-test("system theme, manual toggle and saved preference stay consistent", async ({ page }) => {
+test("system theme, visible active icons, manual toggle and saved preference stay consistent", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
@@ -232,9 +232,54 @@ test("system theme, manual toggle and saved preference stay consistent", async (
   await expect(page.locator("#theme-toggle")).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator("#theme-toggle")).toHaveAttribute("aria-label", "切换到暗黑模式");
 
+  const sunContrast = await page.locator(".theme-icon-sun").evaluate((icon) => {
+    const parse = (value) => value.match(/[\d.]+/g).slice(0, 3).map(Number);
+    const luminance = (rgb) => {
+      const channels = rgb.map((value) => {
+        const channel = value / 255;
+        return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+    };
+    const foreground = luminance(parse(getComputedStyle(icon).color));
+    const background = luminance(parse(getComputedStyle(document.querySelector(".theme-toggle-thumb")).backgroundColor));
+    return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
+  });
+  expect(sunContrast).toBeGreaterThanOrEqual(3);
+
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await expect(page.locator("#theme-toggle")).toHaveAttribute("aria-pressed", "true");
+});
+
+test("theme icons share the moving thumb center on desktop and mobile", async ({ page }) => {
+  await page.addInitScript(() => localStorage.removeItem("xdclub-theme"));
+  await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
+
+  for (const viewport of [{ width: 390, height: 844 }, { width: 1366, height: 768 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/");
+
+    const centerDelta = async (iconSelector) => page.evaluate((selector) => {
+      const icon = document.querySelector(selector).getBoundingClientRect();
+      const thumb = document.querySelector(".theme-toggle-thumb").getBoundingClientRect();
+      return {
+        x: Math.abs((icon.left + icon.width / 2) - (thumb.left + thumb.width / 2)),
+        y: Math.abs((icon.top + icon.height / 2) - (thumb.top + thumb.height / 2)),
+      };
+    }, iconSelector);
+
+    const moon = await centerDelta(".theme-icon-moon");
+    expect(moon.x).toBeLessThanOrEqual(0.75);
+    expect(moon.y).toBeLessThanOrEqual(0.75);
+
+    await page.locator("#theme-toggle").click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    await page.waitForTimeout(30);
+    const sun = await centerDelta(".theme-icon-sun");
+    expect(sun.x).toBeLessThanOrEqual(0.75);
+    expect(sun.y).toBeLessThanOrEqual(0.75);
+  }
 });
 
 test("renamed services load their configured actions, preview, and copyright without the old fragment", async ({ page }) => {
@@ -253,8 +298,9 @@ test("renamed services load their configured actions, preview, and copyright wit
   await expect(page.locator("#service-three [data-service-preview]")).toBeVisible();
   await expect(page.locator("#service-three [data-service-field=action]")).toHaveCount(0);
   await expect(page.locator("#service-three [data-service-field=preview-label]")).toHaveText("服务器地址");
-  await expect(page.locator("#service-three [data-service-field=preview-value]")).toHaveText("mc.example.com:25565");
-  await expect(page.locator("#service-three [data-service-field=preview-note]")).toHaveText("请在 public/site-config.json 中修改此处文本");
+  await expect(page.locator("#service-three [data-service-field=preview-value]")).toHaveText("mc.xdclub.dpdns.org");
+  await expect(page.locator("#service-three [data-service-field=preview-note]")).toHaveCount(0);
+  await expect(page.locator("#service-three [data-copy-server]")).toHaveAccessibleName("复制服务器地址");
   await expect(page.locator("footer")).toHaveText("© 2026 XDCLUB");
   await expect(page.locator("footer a")).toHaveCount(0);
   await expect(page.locator(`.section-nav a[href="${retiredServiceFragment}"]`)).toHaveCount(0);
@@ -335,7 +381,7 @@ test("mobile header uses the exact 20px floating threshold and 52px endpoint", a
   await expect(header).not.toHaveClass(/is-floating/);
   await page.evaluate(() => scrollTo({ top: 24, behavior: "instant" }));
   await expect(header).toHaveClass(/is-floating/);
-  await expect.poll(() => header.evaluate((node) => getComputedStyle(node).borderRadius), { timeout: 1_200 }).toBe("22px");
+  await expect.poll(() => header.evaluate((node) => getComputedStyle(node).borderRadius), { timeout: 1_200 }).toBe("26px");
   await expect.poll(() => header.evaluate((node) => getComputedStyle(node).minHeight), { timeout: 1_200 }).toBe("52px");
 
   await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
@@ -366,6 +412,51 @@ test("free scrolling keeps arbitrary service positions stable", async ({ page })
   expect(Math.abs(await page.evaluate(() => scrollY) - target)).toBeLessThanOrEqual(2);
 });
 
+test("right-side page controls center each service without enabling scroll snap", async ({ page }) => {
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 844, height: 390 },
+    { width: 1366, height: 768 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/");
+
+    for (const serviceId of ["service-one", "service-two", "service-three"]) {
+      await page.locator(`.section-nav a[href="#${serviceId}"]`).click();
+      await expect.poll(() => page.evaluate(() => location.hash)).toBe(`#${serviceId}`);
+      await expect.poll(() => page.locator(`#${serviceId}`).evaluate((panel) => {
+        const bounds = panel.getBoundingClientRect();
+        return Math.abs(bounds.top + bounds.height / 2 - innerHeight / 2);
+      })).toBeLessThanOrEqual(1.5);
+    }
+
+    await page.locator('.section-nav a[href="#home"]').click();
+    await expect.poll(() => page.evaluate(() => Math.abs(scrollY))).toBeLessThanOrEqual(1.5);
+    expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollSnapType)).toBe("none");
+  }
+});
+
+test("service text rises from below once it enters the viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await page.waitForTimeout(600);
+
+  const content = page.locator("#service-two .service-content");
+  const before = await content.evaluate((node) => ({
+    opacity: Number.parseFloat(getComputedStyle(node).opacity),
+    matrix: getComputedStyle(node).transform,
+    duration: getComputedStyle(node).transitionDuration,
+  }));
+  expect(before.opacity).toBe(0);
+  expect(before.matrix).not.toBe("none");
+  expect(before.duration).toContain("0.56s");
+
+  await page.locator('.section-nav a[href="#service-two"]').click();
+  await expect(content).toHaveClass(/is-visible/);
+  await expect.poll(() => content.evaluate((node) => getComputedStyle(node).opacity)).toBe("1");
+  await expect.poll(() => content.evaluate((node) => getComputedStyle(node).transform)).toBe("matrix(1, 0, 0, 1, 0, 0)");
+});
+
 test("title spacing keeps both home title lines visually separate", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
@@ -381,12 +472,11 @@ test("title spacing keeps both home title lines visually separate", async ({ pag
   expect(title.lineHeight).toBeGreaterThan(0);
 });
 
-test("rightmost header navigation stays usable and service art stays behind content", async ({ page }) => {
+test("fixed right-side navigation rail stays usable and service art stays behind content", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
 
   const layout = await page.evaluate(() => {
-    const header = document.querySelector(".site-header");
     const nav = document.querySelector(".section-nav");
     const art = document.querySelector("#service-one .service-art");
     const image = document.querySelector("#service-one .service-oc");
@@ -394,28 +484,54 @@ test("rightmost header navigation stays usable and service art stays behind cont
     const rect = (node) => node.getBoundingClientRect();
     const overlap = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left))
       * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
-    const headerRect = rect(header);
     const navRect = rect(nav);
     const contentRect = rect(content);
     return {
-      navRightOffset: headerRect.right - Number.parseFloat(getComputedStyle(header).paddingRight) - navRect.right,
-      navLinkWidths: [...nav.querySelectorAll("a")].map((link) => rect(link).width),
+      navPosition: getComputedStyle(nav).position,
+      navRightOffset: document.documentElement.clientWidth - navRect.right,
+      navIsVertical: navRect.height > navRect.width,
+      navLinkSizes: [...nav.querySelectorAll("a")].map((link) => ({ width: rect(link).width, height: rect(link).height })),
       artWidth: rect(art).width,
       artHeight: rect(art).height,
       imageFit: getComputedStyle(image).objectFit,
       artPointerEvents: getComputedStyle(art).pointerEvents,
-      headerContentOverlap: overlap(headerRect, contentRect),
+      navContentOverlap: overlap(navRect, contentRect),
     };
   });
 
-  expect(layout.navRightOffset).toBeLessThanOrEqual(16);
-  expect(layout.navRightOffset).toBeGreaterThanOrEqual(-2);
-  expect(layout.navLinkWidths).toEqual([28, 28, 28, 28]);
+  expect(layout.navPosition).toBe("fixed");
+  expect(layout.navRightOffset).toBeLessThanOrEqual(18);
+  expect(layout.navRightOffset).toBeGreaterThanOrEqual(6);
+  expect(layout.navIsVertical).toBe(true);
+  for (const size of layout.navLinkSizes) {
+    expect(size.width).toBeGreaterThanOrEqual(36);
+    expect(size.height).toBeGreaterThanOrEqual(36);
+  }
   expect(layout.artWidth).toBeGreaterThan(0);
   expect(layout.artHeight).toBeGreaterThan(0);
   expect(layout.imageFit).toBe("cover");
   expect(layout.artPointerEvents).toBe("none");
-  expect(layout.headerContentOverlap).toBe(0);
+  expect(layout.navContentOverlap).toBe(0);
+
+  const navLink = page.locator('.section-nav a[href="#service-one"]');
+  await navLink.focus();
+  const focusAppearance = await navLink.evaluate((node) => ({
+    outlineStyle: getComputedStyle(node).outlineStyle,
+    boxShadow: getComputedStyle(node).boxShadow,
+  }));
+  expect(focusAppearance.outlineStyle).toBe("none");
+  expect(focusAppearance.boxShadow).not.toBe("none");
+});
+
+test("Minecraft address copies through the real browser clipboard", async ({ context, page }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: "http://127.0.0.1:8787" });
+  await page.goto("/");
+  await page.locator("#service-three").scrollIntoViewIfNeeded();
+
+  const button = page.locator("#service-three [data-copy-server]");
+  await button.click();
+  await expect(button.locator("[data-copy-label]")).toHaveText("已复制");
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe("mc.xdclub.dpdns.org");
 });
 
 test("short landscape keeps service titles and primary information in the viewport", async ({ page }) => {

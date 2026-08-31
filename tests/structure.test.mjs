@@ -23,13 +23,14 @@ test("four ordered full-screen sections use the service-one identifier", async (
   assert.ok(html.indexOf("<footer") > html.indexOf('id="service-three"'));
 });
 
-test("header brand returns home and exposes accessible navigation and theme control", async () => {
+test("header brand returns home while navigation is exposed as a separate side rail", async () => {
   const html = await readRequired("public/index.html");
 
   assert.match(html, /<a\b[^>]*class="brand"[^>]*href="#home"[^>]*aria-label="XD CLUB，返回首页"[^>]*>\s*<span class="brand-mark" aria-hidden="true">\s*<span class="brand-xd">XD<\/span><span class="brand-club"> CLUB<\/span>\s*<\/span>\s*<\/a>/);
   assert.match(html, /<nav\b[^>]*aria-label="[^"]+"/);
+  assert.match(html, /<nav\b[^>]*class="section-nav"[^>]*aria-label="页面分区"/);
   assert.match(html, /<button\b[^>]*id="theme-toggle"[^>]*aria-pressed="false"/);
-  assert.ok(html.indexOf('id="theme-toggle"') < html.indexOf("<nav"));
+  assert.ok(html.indexOf("</header>") < html.indexOf('<nav class="section-nav"'));
   assert.match(html, /class="skip-link"[^>]*href="#main"/);
 });
 
@@ -40,7 +41,7 @@ test("hero exposes split brand and responsive OC artwork without a header sentin
   assert.match(html, /class="brand-xd">XD<\/span>/);
   assert.match(html, /class="brand-club"> CLUB<\/span>/);
   assert.match(html, /<picture\b[^>]*class="hero-art"/);
-  assert.match(html, /srcset="\/assets\/oc-character-640\.jpg 640w, \/assets\/oc-character-1024\.jpg 1024w"/);
+  assert.match(html, /srcset="\/assets\/oc-character-640\.jpg\?v=a836b4d4f9fc 640w, \/assets\/oc-character-1024\.jpg\?v=a836b4d4f9fc 1024w"/);
   assert.match(html, /class="hero-oc"[^>]*width="1024"[^>]*height="1536"/);
   assert.match(html, /fetchpriority="high"/);
   assert.match(html, /data-reveal/);
@@ -89,8 +90,7 @@ test("configuration preserves custom content in the latest service schema", asyn
   assert.equal(config.services[2].description, "成员服务器连接信息预览。");
   assert.deepEqual(config.services[2].preview, {
     label: "服务器地址",
-    value: "mc.example.com:25565",
-    note: "请在 public/site-config.json 中修改此处文本",
+    value: "mc.xdclub.dpdns.org",
   });
   assert.equal(config.footer.copyright, "© 2026 XDCLUB");
   assert.equal(config.footer.siteUrl, undefined);
@@ -120,25 +120,31 @@ test("branded 404 preserves the customized copy", async () => {
   assert.match(html, /<p>这里没有你要的东西<\/p>/);
 });
 
-test("service backgrounds use local lazy responsive artwork and the footer stays link-free", async () => {
+test("service backgrounds use ordered cache-busted local artwork and the footer stays link-free", async () => {
   const html = await readRequired("public/index.html");
+  const versions = new Map([
+    ["service-one", "230e108141ac"],
+    ["service-two", "9072736d5878"],
+    ["service-three", "1459069044dd"],
+  ]);
 
   for (const service of ["service-one", "service-two", "service-three"]) {
     const start = html.indexOf(`<section id="${service}"`);
     const section = html.slice(start, html.indexOf("</section>", start));
+    const version = versions.get(service);
 
     assert.notEqual(start, -1, `${service} section should exist`);
     assert.match(section, /<picture\b[^>]*class="service-art"[^>]*aria-hidden="true"/);
-    assert.match(section, new RegExp(`srcset="/assets/${service}-640\\.jpg 640w, /assets/${service}-1024\\.jpg 1024w"`));
+    assert.match(section, new RegExp(`srcset="/assets/${service}-640\\.jpg\\?v=${version} 640w, /assets/${service}-1024\\.jpg\\?v=${version} 1024w"`));
     assert.match(section, /sizes="\(max-width: 760px\) 100vw, 52vw"/);
-    assert.match(section, new RegExp(`<img\\b[^>]*class="service-oc"[^>]*src="/assets/${service}-1024\\.jpg"[^>]*width="1024"[^>]*height="1536"[^>]*alt=""[^>]*loading="lazy"[^>]*decoding="async"`));
+    assert.match(section, new RegExp(`<img\\b[^>]*class="service-oc"[^>]*src="/assets/${service}-1024\\.jpg\\?v=${version}"[^>]*width="1024"[^>]*height="1536"[^>]*alt=""[^>]*loading="lazy"[^>]*decoding="async"`));
   }
 
   const footer = html.match(/<footer\b[^>]*>([\s\S]*?)<\/footer>/)?.[1] ?? "";
   assert.doesNotMatch(footer, /<a\b/);
 });
 
-test("Minecraft preview exposes configurable text fields without a service action", async () => {
+test("Minecraft preview exposes a configurable address and copy action without a service link", async () => {
   const html = await readRequired("public/index.html");
   const start = html.indexOf('<section id="service-three"');
   const section = html.slice(start, html.indexOf("</section>", start));
@@ -146,7 +152,9 @@ test("Minecraft preview exposes configurable text fields without a service actio
   assert.match(section, /<div\b[^>]*class="server-preview"[^>]*data-service-preview[^>]*aria-label="Minecraft 服务器信息"/);
   assert.match(section, /data-service-field="preview-label"/);
   assert.match(section, /<code\b[^>]*data-service-field="preview-value"/);
-  assert.match(section, /data-service-field="preview-note"/);
+  assert.match(section, /<button\b[^>]*class="server-copy"[^>]*data-copy-server[^>]*aria-label="复制服务器地址"/);
+  assert.match(section, /data-copy-label[^>]*>复制</);
+  assert.doesNotMatch(section, /data-service-field="preview-note"|请在 public\/site-config\.json 中修改此处文本|:25565/);
   assert.doesNotMatch(section, /<a\b[^>]*data-service-field="action"/);
 });
 
@@ -271,7 +279,7 @@ test("floating header uses the 20px-scroll motion contract with opaque and glass
   const css = await readRequired("public/styles.css");
 
   assert.match(css, /\.site-header\s*\{[^}]*transition:[^}]*border-color\s+700ms\s+cubic-bezier\(0\.16,\s*1,\s*0\.3,\s*1\)/s);
-  assert.match(css, /\.site-header\.is-floating\s*\{[^}]*min-height:\s*52px[^}]*border-radius:\s*22px[^}]*background:\s*var\(--surface-solid\)/s);
+  assert.match(css, /\.site-header\.is-floating\s*\{[^}]*min-height:\s*52px[^}]*border-radius:\s*26px[^}]*background:\s*var\(--surface-solid\)/s);
   assert.match(css, /@supports\s*\(backdrop-filter:\s*blur\(16px\)\)\s*\{\s*\.site-header\.is-floating\s*\{[^}]*background:\s*var\(--header\)[^}]*backdrop-filter:\s*blur\(18px\)\s+saturate\(125%\)/s);
 });
 
@@ -303,15 +311,13 @@ test("custom brand updates visible split text and accessible name through safe s
   assert.equal(attributes.get("aria-label"), "Nova，返回首页");
 });
 
-test("Minecraft preview configuration updates text fields without creating a link", async () => {
+test("Minecraft preview configuration updates the address without creating a link", async () => {
   const { applyConfig } = await import("../public/app.js");
   const label = { textContent: "服务器地址" };
-  const value = { textContent: "mc.example.com:25565" };
-  const note = { textContent: "默认说明" };
+  const value = { textContent: "mc.xdclub.dpdns.org" };
   const fields = new Map([
     ['[data-service-field="preview-label"]', [label]],
     ['[data-service-field="preview-value"]', [value]],
-    ['[data-service-field="preview-note"]', [note]],
   ]);
   const panel = {
     querySelector: (selector) => selector === '[data-service-field="action"]' ? null : null,
@@ -330,8 +336,7 @@ test("Minecraft preview configuration updates text fields without creating a lin
         id: "service-three",
         preview: {
           label: "服务器地址",
-          value: "mc.xdclub.test:25565",
-          note: "Java 版",
+          value: "mc.xdclub.test",
         },
       }],
     });
@@ -340,9 +345,19 @@ test("Minecraft preview configuration updates text fields without creating a lin
   }
 
   assert.equal(label.textContent, "服务器地址");
-  assert.equal(value.textContent, "mc.xdclub.test:25565");
-  assert.equal(note.textContent, "Java 版");
+  assert.equal(value.textContent, "mc.xdclub.test");
   assert.equal(Object.hasOwn(value, "href"), false);
+});
+
+test("Minecraft address copying trims text and fails closed when clipboard access is unavailable", async () => {
+  const { copyServerAddress } = await import("../public/app.js");
+  const writes = [];
+
+  assert.equal(await copyServerAddress("  mc.xdclub.dpdns.org  ", { writeText: async (value) => writes.push(value) }), true);
+  assert.deepEqual(writes, ["mc.xdclub.dpdns.org"]);
+  assert.equal(await copyServerAddress("   ", { writeText: async () => assert.fail("empty values must not be copied") }), false);
+  assert.equal(await copyServerAddress("mc.xdclub.dpdns.org", null), false);
+  assert.equal(await copyServerAddress("mc.xdclub.dpdns.org", { writeText: async () => { throw new Error("denied"); } }), false);
 });
 
 test("self-hosted font and its redistribution license are present", async () => {
@@ -383,15 +398,15 @@ test("OC source and responsive derivatives are preserved", async () => {
   assert.ok(desktop.length <= 350_000, "1024px delivery asset should stay below 350 KB");
   assert.equal(
     createHash("sha256").update(source).digest("hex"),
-    "d6a146171983500f413e578658e8a2476aaebd430672c45c40944ba2a3687edf",
+    "a836b4d4f9fc72ead89162cab8ee0b965ac62183384f66e08e2e10ba94bee6fd",
   );
 });
 
 test("service OC sources retain their provenance and bounded JPEG deliveries", async () => {
   const services = [
-    ["service-one", "6d6797d219e516dface8e391804e00e829e07bb52c74c60fd962a1a03343b379"],
-    ["service-two", "7925c4996ab3f80324d32ab66725d7a1b246aeac542e6213e94770010373ab4f"],
-    ["service-three", "f17a027f050eec51717416756a834826a10678a3730c6e67c7312ecfcc8dd8f2"],
+    ["service-one", "230e108141ac0d62ac6ecb66c95c645c895f07682ae53d34a1331172c6901e81"],
+    ["service-two", "9072736d587827b50a28d7cabcb81e3553bb664e681e863b0053f7620dd33f81"],
+    ["service-three", "1459069044dd001436da17110080502c783af70086993612c5845339c2f3382a"],
   ];
 
   for (const [service, expectedHash] of services) {

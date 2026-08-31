@@ -69,9 +69,9 @@ test("same-origin OC assets stay local and markup does not expose local paths", 
   const html = await readFile("public/index.html", "utf8");
   assert.doesNotMatch(html, /\/var\/folders|file:\/\//i);
   assert.doesNotMatch(html, /<img[^>]+src=["']https?:\/\//i);
-  assert.match(html, /src="\/assets\/oc-character-1024\.jpg"/);
+  assert.match(html, /src="\/assets\/oc-character-1024\.jpg\?v=[0-9a-f]{12}"/);
   for (const service of ["service-one", "service-two", "service-three"]) {
-    assert.match(html, new RegExp(`src="/assets/${service}-1024\\.jpg"`));
+    assert.match(html, new RegExp(`src="/assets/${service}-1024\\.jpg\\?v=[0-9a-f]{12}"`));
   }
 });
 

@@ -33,8 +33,7 @@
       "description": "成员服务器连接信息预览。",
       "preview": {
         "label": "服务器地址",
-        "value": "mc.example.com:25565",
-        "note": "请在 public/site-config.json 中修改此处文本"
+        "value": "mc.xdclub.dpdns.org"
       }
     }
   ],

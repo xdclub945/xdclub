@@ -16,10 +16,10 @@
 | --- | --- |
 | `pnpm install --frozen-lockfile` | 通过；锁文件未变更，未新增依赖。 |
 | `pnpm run check:syntax` | 通过；`src/worker.js`、`public/theme-init.js`、`public/app.js` 均通过 `node --check`。 |
-| `pnpm test` | 36/36 通过。 |
+| `pnpm test` | 37/37 通过。 |
 | `pnpm run test:wrangler` | 1/1 通过。 |
-| `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" pnpm run test:browser` | 35/35 通过；未启用截图标志。 |
-| `OC_REVIEW_SCREENSHOTS=1 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" pnpm run test:browser` | 35/35 通过；重新生成并审阅 28 张临时截图。 |
+| `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" pnpm run test:browser` | 39/39 通过；未启用截图标志。 |
+| `OC_REVIEW_SCREENSHOTS=1 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" pnpm run test:browser` | 生成并审阅 28 张临时截图；审计发现亮色太阳图标过渡态对比度为 2.89:1，修复后定向 2/2 与最终完整 39/39 通过。 |
 | `pnpm audit --audit-level=high` | `No known vulnerabilities found`。 |
 | `pnpm exec wrangler deploy --dry-run` | 通过；Wrangler 读取 22 个静态资产条目并识别 `env.ASSETS`，未部署。 |
 | `git diff --check` / `git fsck --full --no-dangling` | 通过。 |
@@ -37,26 +37,26 @@
 - 四个纵向分区、自由滚动和任意中间位置不会被 scroll snap 拉走。
 - 无水平溢出；首页高度精确为一屏，短横屏使用 `max(100svh, 430px)`；服务区块至少一屏高。
 - 首页与三张服务 OC 均从同源本地响应式 JPEG 加载，保持 2:3、`object-fit: cover`、有效尺寸和面部地标可见。
-- 顶部导航顺序为主题切换后接右侧 `01–04`；活动分区在深浅主题中可区分。
-- 滚动超过 20px 后页头进入 22px 圆角、52px 高的悬浮状态；返回顶部后合并，且无 IntersectionObserver 时仍可工作。
+- `01–04` 使用独立的右侧竖向分页栏；点击服务页码会把目标分区居中，首页回到顶端，并保持普通滚轮/触控自由滚动。
+- 滚动超过 20px 后页头进入 26px 圆角、52px 高的悬浮状态；返回顶部后合并，且无 IntersectionObserver 时仍可工作。
 - 页头不覆盖可见文案；844×390 短横屏的服务标题、入口按钮和 Minecraft 信息卡仍位于视口内。
 - XD Proxy 入口为有背景、有边框、至少 46px 高且有足够横向内边距的显眼按钮；OOPZ 入口使用同一安全链接行为，Minecraft 卡片不生成链接。
-- `service-one` 新标识、两项自定义服务、Minecraft 自定义字段、版权-only 页脚、自定义 404、配置请求失败/禁用 JavaScript 兜底、主题持久化、键盘跳转、减少动画、404/405、MIME 和安全响应头均符合约定。
+- `service-one` 标识、两项自定义服务、Minecraft 正式地址与复制按钮、版权-only 页脚、自定义 404、配置请求失败/禁用 JavaScript 兜底、主题持久化、键盘跳转、文字上浮与减少动画、404/405、MIME 和安全响应头均符合约定。
 
 ## 人工视觉审阅
 
 显式审计模式在当前最终代码上生成 28 张截图，覆盖 7 个代表性视口（`320x568`、`390x844`、`844x390`、`768x1024`、`1366x768`、`1920x1080`、`2560x1080`）的顶端/悬浮页头和深色/浅色主题。逐张审阅确认：人物正脸、双眼和比例正常；首页标题行距清晰；页码位于右侧；圆角悬浮页头没有遮挡；服务入口在两种主题中均明显可读。
 
-Task 5 还通过临时定向视图审阅了第二至第四屏的 390×844，以及第三、第四屏的 844×390 深浅主题状态，确认三张新背景映射正确，第三屏标题不再在短横屏异常竖排，第四屏 Minecraft 卡片内容完整。上述视图均为可再生成的临时验证证据，最终清理后不纳入仓库。
+本次还通过临时定向视图审阅了第二至第四屏的 390×844，以及第三、第四屏的 844×390 深浅主题状态，确认三张新背景映射正确，第三屏标题不再在短横屏异常竖排，第四屏 Minecraft 卡片内容完整。上述视图均为可再生成的临时验证证据，最终清理后不纳入仓库。
 
 ## 资源来源与尺寸
 
 四张保留源图均为 1024×1536，SHA-256 如下：
 
-- `oc-character-original.png`：`d6a146171983500f413e578658e8a2476aaebd430672c45c40944ba2a3687edf`
-- `service-one-original.png`：`6d6797d219e516dface8e391804e00e829e07bb52c74c60fd962a1a03343b379`
-- `service-two-original.png`：`7925c4996ab3f80324d32ab66725d7a1b246aeac542e6213e94770010373ab4f`
-- `service-three-original.png`：`f17a027f050eec51717416756a834826a10678a3730c6e67c7312ecfcc8dd8f2`
+- `oc-character-original.png`：`a836b4d4f9fc72ead89162cab8ee0b965ac62183384f66e08e2e10ba94bee6fd`
+- `service-one-original.png`：`230e108141ac0d62ac6ecb66c95c645c895f07682ae53d34a1331172c6901e81`
+- `service-two-original.png`：`9072736d587827b50a28d7cabcb81e3553bb664e681e863b0053f7620dd33f81`
+- `service-three-original.png`：`1459069044dd001436da17110080502c783af70086993612c5845339c2f3382a`
 
 每张源图都有 640×960 与 1024×1536 两个本地 JPEG 衍生文件。来源测试逐项核对文件存在、比例、尺寸和体积上限；网页不引用剪贴板路径、远程图片或第三方脚本。
 
@@ -68,4 +68,4 @@ Task 5 还通过临时定向视图审阅了第二至第四屏的 390×844，以�
 
 ## 清理状态
 
-常规浏览器回归不会写入审计截图。第一阶段已按精确路径删除显式截图、Wrangler 临时包、Playwright 结果、日志、项目缓存和四张剪贴板输入图；为保证复审可追溯，`node_modules` 与两份 SDD 工作区只保留到独立终审结束，随后再按精确路径删除。整个过程不对系统临时目录使用通配删除，也不遗留本项目的 Wrangler/Playwright 监听进程。
+常规浏览器回归不会写入审计截图。最终已按精确路径删除显式截图、Wrangler/Playwright 结果与日志、项目缓存、`node_modules` 以及本次仍存在的八张剪贴板输入图；四张正式源图及其八个响应式衍生文件保留在仓库。整个过程未对系统临时目录使用通配删除，也未遗留本项目的 Wrangler/Playwright 监听进程。

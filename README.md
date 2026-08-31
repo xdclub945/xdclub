@@ -12,7 +12,7 @@ XDCLUB 私人俱乐部官网。一个可直接部署到 Cloudflare Workers Stati
 - `home`：第一屏眉题、主标题和简介。
 - `services[0]`：`id` 必须保持为 `service-one`；它控制第二屏 XD Proxy 的文字和入口，目前指向 `https://custom.xdclub.dpdns.org/`。
 - `services[1]`：第三屏 OOPZ 语音入口，目前指向 `https://oopz.cn/i/By3GmC`。
-- `services[2]`：第四屏 Minecraft 信息预览，不是链接。修改 `preview.label`、`preview.value` 和 `preview.note` 即可更换标签、服务器地址和备注。
+- `services[2]`：第四屏 Minecraft 信息预览，不是链接。修改 `preview.label` 和 `preview.value` 即可更换标签与服务器地址；当前正式地址为 `mc.xdclub.dpdns.org`。
 - `footer.copyright`：页脚只显示版权文字，不包含网址或返回顶部链接。
 
 所有配置文字都通过 `textContent` 写入；服务 URL 仅接受绝对 `http:` 或 `https:` 地址。配置文件不可用时，HTML 内置默认内容仍会显示。

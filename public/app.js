@@ -23,6 +23,18 @@ export function getPreferredTheme(storage, media) {
   return media.matches ? "dark" : "light";
 }
 
+export async function copyServerAddress(value, clipboard) {
+  const address = typeof value === "string" ? value.trim() : "";
+  if (!address || typeof clipboard?.writeText !== "function") return false;
+
+  try {
+    await clipboard.writeText(address);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function updateThemeButton(button, theme) {
   if (!button) return;
 
@@ -67,7 +79,6 @@ function applyService(root, service) {
   if (service.preview && typeof service.preview === "object") {
     setText(panel, '[data-service-field="preview-label"]', service.preview.label);
     setText(panel, '[data-service-field="preview-value"]', service.preview.value);
-    setText(panel, '[data-service-field="preview-note"]', service.preview.note);
   }
 
   const action = panel.querySelector('[data-service-field="action"]');
@@ -135,6 +146,7 @@ function setupViewportEffects() {
   const reveals = [...document.querySelectorAll("[data-reveal]")];
   const panels = [...document.querySelectorAll(".panel[id]")];
   const navLinks = [...document.querySelectorAll(".section-nav a")];
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   document.documentElement.classList.add("effects-ready");
 
@@ -148,6 +160,20 @@ function setupViewportEffects() {
   };
   syncHeader();
   window.addEventListener("scroll", requestHeaderSync, { passive: true });
+
+  for (const link of navLinks) {
+    link.addEventListener("click", (event) => {
+      const target = document.getElementById(link.hash.slice(1));
+      if (!target) return;
+
+      event.preventDefault();
+      history.pushState(null, "", link.hash);
+      target.scrollIntoView({
+        behavior: reducedMotion.matches ? "auto" : "smooth",
+        block: target.id === "home" ? "start" : "center",
+      });
+    });
+  }
 
   if (!("IntersectionObserver" in window)) {
     for (const node of reveals) node.classList.add("is-visible");
@@ -184,6 +210,37 @@ function setupViewportEffects() {
   for (const panel of panels) sectionObserver.observe(panel);
 }
 
+function setupServerCopy() {
+  const button = document.querySelector("[data-copy-server]");
+  const value = document.querySelector('[data-service-field="preview-value"]');
+  const label = button?.querySelector("[data-copy-label]");
+  if (!button || !value || !label) return;
+
+  let resetTimer = 0;
+  button.addEventListener("click", async () => {
+    let clipboard = null;
+    try {
+      clipboard = navigator.clipboard;
+    } catch {
+      // Clipboard access can be blocked by browser permissions.
+    }
+
+    button.disabled = true;
+    const copied = await copyServerAddress(value.textContent, clipboard);
+    label.textContent = copied ? "已复制" : "复制失败";
+    button.dataset.state = copied ? "success" : "error";
+    button.setAttribute("aria-label", copied ? "服务器地址已复制" : "复制服务器地址失败");
+    button.disabled = false;
+
+    window.clearTimeout(resetTimer);
+    resetTimer = window.setTimeout(() => {
+      label.textContent = "复制";
+      button.removeAttribute("data-state");
+      button.setAttribute("aria-label", "复制服务器地址");
+    }, 1600);
+  });
+}
+
 function start() {
   const root = document.documentElement;
   const button = document.querySelector("#theme-toggle");
@@ -216,6 +273,7 @@ function start() {
   });
 
   setupViewportEffects();
+  setupServerCopy();
   loadConfig(window.fetch.bind(window), document);
 }
 

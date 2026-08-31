@@ -38,15 +38,15 @@
             <span class="theme-toggle-thumb"></span>
           </span>
         </button>
-
-        <nav class="section-nav" aria-label="页面分区">
-          <a href="#home" aria-label="前往第一屏">01</a>
-          <a href="#service-one" aria-label="前往第二屏">02</a>
-          <a href="#service-two" aria-label="前往第三屏">03</a>
-          <a href="#service-three" aria-label="前往第四屏">04</a>
-        </nav>
       </div>
     </header>
+
+    <nav class="section-nav" aria-label="页面分区">
+      <a href="#home" aria-label="前往第一屏">01</a>
+      <a href="#service-one" aria-label="前往第二屏">02</a>
+      <a href="#service-two" aria-label="前往第三屏">03</a>
+      <a href="#service-three" aria-label="前往第四屏">04</a>
+    </nav>
 
     <main id="main">
       <section id="home" class="panel panel-home" aria-labelledby="home-title">
@@ -61,13 +61,13 @@
           </div>
           <picture class="hero-art" aria-label="XD CLUB 原创角色">
             <source
-              srcset="/assets/oc-character-640.jpg 640w, /assets/oc-character-1024.jpg 1024w"
+              srcset="/assets/oc-character-640.jpg?v=a836b4d4f9fc 640w, /assets/oc-character-1024.jpg?v=a836b4d4f9fc 1024w"
               sizes="(max-width: 760px) 100vw, (max-width: 1180px) 52vw, 48vw"
               type="image/jpeg"
             >
             <img
               class="hero-oc"
-              src="/assets/oc-character-1024.jpg"
+              src="/assets/oc-character-1024.jpg?v=a836b4d4f9fc"
               width="1024"
               height="1536"
               alt="XD CLUB 原创角色"
@@ -81,8 +81,8 @@
 
       <section id="service-one" class="panel panel-service panel-service-one" aria-labelledby="service-one-title" data-service-id="service-one">
         <picture class="service-art" aria-hidden="true">
-          <source srcset="/assets/service-one-640.jpg 640w, /assets/service-one-1024.jpg 1024w" sizes="(max-width: 760px) 100vw, 52vw" type="image/jpeg">
-          <img class="service-oc" src="/assets/service-one-1024.jpg" width="1024" height="1536" alt="" loading="lazy" decoding="async">
+          <source srcset="/assets/service-one-640.jpg?v=230e108141ac 640w, /assets/service-one-1024.jpg?v=230e108141ac 1024w" sizes="(max-width: 760px) 100vw, 52vw" type="image/jpeg">
+          <img class="service-oc" src="/assets/service-one-1024.jpg?v=230e108141ac" width="1024" height="1536" alt="" loading="lazy" decoding="async">
         </picture>
         <article class="service-content" data-reveal>
           <p class="eyebrow" data-service-field="eyebrow">Featured service</p>
@@ -95,8 +95,8 @@
 
       <section id="service-two" class="panel panel-service panel-reserved" aria-labelledby="service-two-title" data-service-id="service-two">
         <picture class="service-art" aria-hidden="true">
-          <source srcset="/assets/service-two-640.jpg 640w, /assets/service-two-1024.jpg 1024w" sizes="(max-width: 760px) 100vw, 52vw" type="image/jpeg">
-          <img class="service-oc" src="/assets/service-two-1024.jpg" width="1024" height="1536" alt="" loading="lazy" decoding="async">
+          <source srcset="/assets/service-two-640.jpg?v=9072736d5878 640w, /assets/service-two-1024.jpg?v=9072736d5878 1024w" sizes="(max-width: 760px) 100vw, 52vw" type="image/jpeg">
+          <img class="service-oc" src="/assets/service-two-1024.jpg?v=9072736d5878" width="1024" height="1536" alt="" loading="lazy" decoding="async">
         </picture>
         <article class="service-content" data-reveal>
           <p class="eyebrow" data-service-field="eyebrow">Reserved service</p>
@@ -109,8 +109,8 @@
 
       <section id="service-three" class="panel panel-service panel-reserved panel-final" aria-labelledby="service-three-title" data-service-id="service-three">
         <picture class="service-art" aria-hidden="true">
-          <source srcset="/assets/service-three-640.jpg 640w, /assets/service-three-1024.jpg 1024w" sizes="(max-width: 760px) 100vw, 52vw" type="image/jpeg">
-          <img class="service-oc" src="/assets/service-three-1024.jpg" width="1024" height="1536" alt="" loading="lazy" decoding="async">
+          <source srcset="/assets/service-three-640.jpg?v=1459069044dd 640w, /assets/service-three-1024.jpg?v=1459069044dd 1024w" sizes="(max-width: 760px) 100vw, 52vw" type="image/jpeg">
+          <img class="service-oc" src="/assets/service-three-1024.jpg?v=1459069044dd" width="1024" height="1536" alt="" loading="lazy" decoding="async">
         </picture>
         <article class="service-content" data-reveal>
           <p class="eyebrow" data-service-field="eyebrow">Minecraft server</p>
@@ -119,8 +119,16 @@
           <p class="service-description" data-service-field="description">成员服务器连接信息预览。</p>
           <div class="server-preview" data-service-preview aria-label="Minecraft 服务器信息">
             <span class="server-preview-label" data-service-field="preview-label">服务器地址</span>
-            <code class="server-preview-value" data-service-field="preview-value">mc.example.com:25565</code>
-            <span class="server-preview-note" data-service-field="preview-note">请在 public/site-config.json 中修改此处文本</span>
+            <div class="server-preview-row">
+              <code class="server-preview-value" data-service-field="preview-value">mc.xdclub.dpdns.org</code>
+              <button class="server-copy" type="button" data-copy-server aria-label="复制服务器地址">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="8" y="8" width="11" height="11" rx="2"></rect>
+                  <path d="M16 8V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h1"></path>
+                </svg>
+                <span data-copy-label>复制</span>
+              </button>
+            </div>
           </div>
         </article>
 
