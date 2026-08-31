@@ -231,6 +231,7 @@ test("system theme, visible active icons, manual toggle and saved preference sta
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await expect(page.locator("#theme-toggle")).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator("#theme-toggle")).toHaveAttribute("aria-label", "切换到暗黑模式");
+  await expect(page.locator(".theme-icon-sun")).toHaveCSS("color", "rgb(255, 255, 255)");
 
   const sunContrast = await page.locator(".theme-icon-sun").evaluate((icon) => {
     const parse = (value) => value.match(/[\d.]+/g).slice(0, 3).map(Number);
@@ -275,10 +276,8 @@ test("theme icons share the moving thumb center on desktop and mobile", async ({
 
     await page.locator("#theme-toggle").click();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-    await page.waitForTimeout(30);
-    const sun = await centerDelta(".theme-icon-sun");
-    expect(sun.x).toBeLessThanOrEqual(0.75);
-    expect(sun.y).toBeLessThanOrEqual(0.75);
+    await expect.poll(async () => (await centerDelta(".theme-icon-sun")).x).toBeLessThanOrEqual(0.75);
+    await expect.poll(async () => (await centerDelta(".theme-icon-sun")).y).toBeLessThanOrEqual(0.75);
   }
 });
 
