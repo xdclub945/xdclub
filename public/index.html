@@ -17,23 +17,15 @@
   </head>
   <body>
     <a class="skip-link" href="#main">跳到主要内容</a>
-    <span class="top-sentinel" aria-hidden="true"></span>
 
     <header class="site-header">
-      <a class="brand" href="#home" aria-label="XDclub，返回首页">
+      <a class="brand" href="#home" aria-label="XD CLUB，返回首页">
         <span class="brand-mark" aria-hidden="true">
-          <span class="brand-xd">XD</span><span class="brand-club">club</span>
+          <span class="brand-xd">XD</span><span class="brand-club"> CLUB</span>
         </span>
       </a>
 
       <div class="header-actions">
-        <nav class="section-nav" aria-label="页面分区">
-          <a href="#home" aria-label="前往第一屏">01</a>
-          <a href="#custom" aria-label="前往第二屏">02</a>
-          <a href="#service-two" aria-label="前往第三屏">03</a>
-          <a href="#service-three" aria-label="前往第四屏">04</a>
-        </nav>
-
         <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切换到白天模式" aria-pressed="false">
           <span class="theme-toggle-track" aria-hidden="true">
             <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" role="img">
@@ -46,6 +38,13 @@
             <span class="theme-toggle-thumb"></span>
           </span>
         </button>
+
+        <nav class="section-nav" aria-label="页面分区">
+          <a href="#home" aria-label="前往第一屏">01</a>
+          <a href="#service-one" aria-label="前往第二屏">02</a>
+          <a href="#service-two" aria-label="前往第三屏">03</a>
+          <a href="#service-three" aria-label="前往第四屏">04</a>
+        </nav>
       </div>
     </header>
 
@@ -55,12 +54,12 @@
           <div class="home-copy" data-reveal>
             <p class="eyebrow" data-config="home.eyebrow">Private digital club · Est. 2026</p>
             <h1 id="home-title" class="hero-title">
-              <span data-config="home.titlePrimary">Built for</span>
-              <span class="text-gold" data-config="home.titleAccent">the chosen few.</span>
+              <span data-config="home.titlePrimary">小丁</span>
+              <span class="text-gold" data-config="home.titleAccent">俱乐部</span>
             </h1>
-            <p class="hero-description" data-config="home.description">这里放置可自由修改的俱乐部介绍、宣言或欢迎文字。</p>
+            <p class="hero-description" data-config="home.description">专为电竞玩家打造的综合服务站点</p>
           </div>
-          <picture class="hero-art" aria-label="XDclub 原创角色">
+          <picture class="hero-art" aria-label="XD CLUB 原创角色">
             <source
               srcset="/assets/oc-character-640.jpg 640w, /assets/oc-character-1024.jpg 1024w"
               sizes="(max-width: 760px) 100vw, (max-width: 1180px) 52vw, 48vw"
@@ -71,7 +70,7 @@
               src="/assets/oc-character-1024.jpg"
               width="1024"
               height="1536"
-              alt="XDclub 原创角色"
+              alt="XD CLUB 原创角色"
               fetchpriority="high"
               decoding="async"
             >
@@ -80,39 +79,53 @@
         <p class="scroll-hint" aria-hidden="true">Scroll to discover</p>
       </section>
 
-      <section id="custom" class="panel panel-service panel-custom" aria-labelledby="custom-title" data-service-id="custom">
+      <section id="service-one" class="panel panel-service panel-service-one" aria-labelledby="service-one-title" data-service-id="service-one">
+        <picture class="service-art" aria-hidden="true">
+          <source srcset="/assets/service-one-640.jpg 640w, /assets/service-one-1024.jpg 1024w" sizes="(max-width: 760px) 100vw, 52vw" type="image/jpeg">
+          <img class="service-oc" src="/assets/service-one-1024.jpg" width="1024" height="1536" alt="" loading="lazy" decoding="async">
+        </picture>
         <article class="service-content" data-reveal>
           <p class="eyebrow" data-service-field="eyebrow">Featured service</p>
           <p class="section-index" aria-hidden="true" data-service-field="index">01</p>
-          <h2 id="custom-title" class="service-title" data-service-field="title">XD Custom</h2>
+          <h2 id="service-one-title" class="service-title" data-service-field="title">XD Proxy</h2>
           <p class="service-description" data-service-field="description">XDCLUB 专属定制服务入口。</p>
-          <a class="service-link" data-service-field="action" href="http://custom.xdclub.dpdns.org/" target="_blank" rel="noopener noreferrer">访问服务 <span aria-hidden="true">↗</span></a>
+          <a class="service-link" data-service-field="action" href="https://custom.xdclub.dpdns.org/" target="_blank" rel="noopener noreferrer">访问服务 <span aria-hidden="true">↗</span></a>
         </article>
       </section>
 
       <section id="service-two" class="panel panel-service panel-reserved" aria-labelledby="service-two-title" data-service-id="service-two">
+        <picture class="service-art" aria-hidden="true">
+          <source srcset="/assets/service-two-640.jpg 640w, /assets/service-two-1024.jpg 1024w" sizes="(max-width: 760px) 100vw, 52vw" type="image/jpeg">
+          <img class="service-oc" src="/assets/service-two-1024.jpg" width="1024" height="1536" alt="" loading="lazy" decoding="async">
+        </picture>
         <article class="service-content" data-reveal>
           <p class="eyebrow" data-service-field="eyebrow">Reserved service</p>
           <p class="section-index" aria-hidden="true" data-service-field="index">02</p>
-          <h2 id="service-two-title" class="service-title" data-service-field="title">即将开放</h2>
-          <p class="service-description" data-service-field="description">为下一项成员服务预留的独立入口。</p>
-          <a class="service-link is-disabled" data-service-field="action" aria-disabled="true">即将开放</a>
+          <h2 id="service-two-title" class="service-title" data-service-field="title">oopz</h2>
+          <p class="service-description" data-service-field="description">来这里语音</p>
+          <a class="service-link" data-service-field="action" href="https://oopz.cn/i/By3GmC" target="_blank" rel="noopener noreferrer">点这里 <span aria-hidden="true">↗</span></a>
         </article>
       </section>
 
       <section id="service-three" class="panel panel-service panel-reserved panel-final" aria-labelledby="service-three-title" data-service-id="service-three">
+        <picture class="service-art" aria-hidden="true">
+          <source srcset="/assets/service-three-640.jpg 640w, /assets/service-three-1024.jpg 1024w" sizes="(max-width: 760px) 100vw, 52vw" type="image/jpeg">
+          <img class="service-oc" src="/assets/service-three-1024.jpg" width="1024" height="1536" alt="" loading="lazy" decoding="async">
+        </picture>
         <article class="service-content" data-reveal>
-          <p class="eyebrow" data-service-field="eyebrow">Reserved service</p>
+          <p class="eyebrow" data-service-field="eyebrow">Minecraft server</p>
           <p class="section-index" aria-hidden="true" data-service-field="index">03</p>
-          <h2 id="service-three-title" class="service-title" data-service-field="title">即将开放</h2>
-          <p class="service-description" data-service-field="description">为未来扩展预留的独立入口。</p>
-          <a class="service-link is-disabled" data-service-field="action" aria-disabled="true">即将开放</a>
+          <h2 id="service-three-title" class="service-title" data-service-field="title">Minecraft Server</h2>
+          <p class="service-description" data-service-field="description">成员服务器连接信息预览。</p>
+          <div class="server-preview" data-service-preview aria-label="Minecraft 服务器信息">
+            <span class="server-preview-label" data-service-field="preview-label">服务器地址</span>
+            <code class="server-preview-value" data-service-field="preview-value">mc.example.com:25565</code>
+            <span class="server-preview-note" data-service-field="preview-note">请在 public/site-config.json 中修改此处文本</span>
+          </div>
         </article>
 
         <footer class="site-footer">
           <span data-config="footer.copyright">© 2026 XDCLUB</span>
-          <a href="https://xdclub.dpdns.org/" data-config-link="footer.siteUrl" data-config="footer.siteUrl">xdclub.dpdns.org</a>
-          <a href="#home">返回顶部 <span aria-hidden="true">↑</span></a>
         </footer>
       </section>
     </main>

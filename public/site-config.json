@@ -8,7 +8,7 @@
   },
   "services": [
     {
-      "id": "custom",
+      "id": "service-one",
       "index": "01",
       "eyebrow": "Featured service",
       "title": "XD Proxy",
@@ -28,15 +28,17 @@
     {
       "id": "service-three",
       "index": "03",
-      "eyebrow": "Reserved service",
-      "title": "即将开放",
-      "description": "为未来扩展预留的独立入口。",
-      "action": "即将开放",
-      "url": null
+      "eyebrow": "Minecraft server",
+      "title": "Minecraft Server",
+      "description": "成员服务器连接信息预览。",
+      "preview": {
+        "label": "服务器地址",
+        "value": "mc.example.com:25565",
+        "note": "请在 public/site-config.json 中修改此处文本"
+      }
     }
   ],
   "footer": {
-    "copyright": "© 2026 XDCLUB",
-    "siteUrl": "https://xdclub.dpdns.org/"
+    "copyright": "© 2026 XDCLUB"
   }
 }

@@ -53,20 +53,20 @@ test("Wrangler serves the homepage and branded 404 with security headers", { tim
 
   const missing = await fetch("http://127.0.0.1:8790/not-a-real-page");
   assert.equal(missing.status, 404);
-  assert.match(await missing.text(), /页面未找到/);
+  assert.match(await missing.text(), /页面找不到了啦qwq/);
   assert.equal(missing.headers.get("x-content-type-options"), "nosniff");
 
   const conditionalMissing = await fetch("http://127.0.0.1:8790/not-a-real-page", {
     headers: { "If-None-Match": missing.headers.get("etag") ?? '"cached-404"' },
   });
   assert.equal(conditionalMissing.status, 404);
-  assert.match(await conditionalMissing.text(), /页面未找到/);
+  assert.match(await conditionalMissing.text(), /页面找不到了啦qwq/);
 
   const rangedMissing = await fetch("http://127.0.0.1:8790/not-a-real-page", {
     headers: { Range: "bytes=0-10" },
   });
   assert.equal(rangedMissing.status, 404);
-  assert.match(await rangedMissing.text(), /页面未找到/);
+  assert.match(await rangedMissing.text(), /页面找不到了啦qwq/);
 
   const rejected = await fetch("http://127.0.0.1:8790/not-a-real-page", { method: "POST" });
   assert.equal(rejected.status, 405);

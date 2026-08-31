@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
+import path from "node:path";
 
 async function readRequired(path) {
   try {
@@ -8,6 +9,17 @@ async function readRequired(path) {
   } catch (error) {
     assert.fail(`${path} should exist and be readable: ${error.message}`);
   }
+}
+
+async function readCurrentFiles(directory) {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const files = await Promise.all(entries.map(async (entry) => {
+    const target = path.join(directory, entry.name);
+    if (entry.isDirectory()) return readCurrentFiles(target);
+    if (!/\.(?:css|html|js|json|mjs)$/i.test(entry.name)) return [];
+    return [[target, await readRequired(target)]];
+  }));
+  return files.flat();
 }
 
 test("asset responses enforce a same-origin content policy", async () => {
@@ -53,11 +65,14 @@ test("editable content and scripts are always revalidated", async () => {
   }
 });
 
-test("OC assets stay same-origin and markup does not expose local paths", async () => {
+test("same-origin OC assets stay local and markup does not expose local paths", async () => {
   const html = await readFile("public/index.html", "utf8");
   assert.doesNotMatch(html, /\/var\/folders|file:\/\//i);
   assert.doesNotMatch(html, /<img[^>]+src=["']https?:\/\//i);
   assert.match(html, /src="\/assets\/oc-character-1024\.jpg"/);
+  for (const service of ["service-one", "service-two", "service-three"]) {
+    assert.match(html, new RegExp(`src="/assets/${service}-1024\\.jpg"`));
+  }
 });
 
 test("replaceable OC assets use a conservative cache lifetime", async () => {
@@ -112,4 +127,33 @@ test("HTML and CSS contain no inline executable hooks or remote imports", async 
   assert.doesNotMatch(html, /<script(?![^>]*\bsrc=)[^>]*>/i);
   assert.doesNotMatch(css, /@import\b/i);
   assert.doesNotMatch(css, /url\(\s*["']?https?:/i);
+});
+
+test("current runtime files contain no stale hooks, executable sinks, debug code, or secrets", async () => {
+  const currentFiles = [
+    ...await readCurrentFiles("public"),
+    ...await readCurrentFiles("src"),
+    ...await readCurrentFiles("tests"),
+    ["README.md", await readRequired("README.md")],
+  ].filter(([file]) => !["tests/security.test.mjs", "tests/structure.test.mjs"].includes(file));
+  const externalServiceHost = "custom.xdclub.dpdns.org";
+  const forbidden = [
+    ["runtime custom fragment", new RegExp(`${["#", "custom"].join("")}`)],
+    ["custom id hook", /(?:id|data-service-id)=["']custom["']/],
+    ["footer URL hook", /siteUrl/],
+    ["Codex temporary path", /\/(?:var\/folders|private\/tmp|tmp)\//i],
+    ["remote image", /<img[^>]+src=["']https?:\/\//i],
+    ["executable HTML sink", /\.(?:innerHTML|outerHTML)\s*=/],
+    ["dynamic evaluation", /\b(?:eval|Function)\s*\(/],
+    ["debug statement", /\b(?:console\.(?:log|debug|info|table|trace|warn)|debugger)\b/],
+    ["private key marker", /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/],
+    ["plausible secret literal", /(?:api[_-]?key|secret|token|password)\s*[:=]\s*["'][^"']{12,}["']/i],
+  ];
+
+  for (const [file, source] of currentFiles) {
+    const safeSource = source.replaceAll(externalServiceHost, "approved-service-host");
+    for (const [name, pattern] of forbidden) {
+      assert.doesNotMatch(safeSource, pattern, `${file} contains ${name}`);
+    }
+  }
 });

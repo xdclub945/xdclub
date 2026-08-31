@@ -64,6 +64,12 @@ function applyService(root, service) {
   setText(panel, '[data-service-field="title"]', service.title);
   setText(panel, '[data-service-field="description"]', service.description);
 
+  if (service.preview && typeof service.preview === "object") {
+    setText(panel, '[data-service-field="preview-label"]', service.preview.label);
+    setText(panel, '[data-service-field="preview-value"]', service.preview.value);
+    setText(panel, '[data-service-field="preview-note"]', service.preview.note);
+  }
+
   const action = panel.querySelector('[data-service-field="action"]');
   if (!action) return;
 
@@ -111,12 +117,6 @@ export function applyConfig(root, config) {
 
   if (config.footer && typeof config.footer === "object") {
     setText(root, '[data-config="footer.copyright"]', config.footer.copyright);
-    const footerLink = root.querySelector('[data-config-link="footer.siteUrl"]');
-    const footerUrl = safeHttpUrl(config.footer.siteUrl);
-    if (footerLink && footerUrl) {
-      footerLink.href = footerUrl;
-      footerLink.textContent = new URL(footerUrl).host;
-    }
   }
 }
 
@@ -125,29 +125,33 @@ export async function loadConfig(fetcher, root) {
     const response = await fetcher(CONFIG_URL, { headers: { accept: "application/json" } });
     if (!response.ok) throw new Error(`Configuration request failed with ${response.status}`);
     applyConfig(root, await response.json());
-  } catch (error) {
-    console.warn("XDCLUB configuration was not applied; using HTML defaults.", error);
+  } catch {
+    // Keep the safe HTML defaults when configuration cannot be loaded.
   }
 }
 
 function setupViewportEffects() {
   const header = document.querySelector(".site-header");
-  const sentinel = document.querySelector(".top-sentinel");
   const reveals = [...document.querySelectorAll("[data-reveal]")];
   const panels = [...document.querySelectorAll(".panel[id]")];
   const navLinks = [...document.querySelectorAll(".section-nav a")];
 
   document.documentElement.classList.add("effects-ready");
 
+  let headerFrame = 0;
+  const syncHeader = () => {
+    headerFrame = 0;
+    header?.classList.toggle("is-floating", window.scrollY > 20);
+  };
+  const requestHeaderSync = () => {
+    if (!headerFrame) headerFrame = window.requestAnimationFrame(syncHeader);
+  };
+  syncHeader();
+  window.addEventListener("scroll", requestHeaderSync, { passive: true });
+
   if (!("IntersectionObserver" in window)) {
     for (const node of reveals) node.classList.add("is-visible");
     return;
-  }
-
-  if (header && sentinel) {
-    new IntersectionObserver(([entry]) => {
-      header.classList.toggle("is-floating", !entry.isIntersecting);
-    }, { threshold: 1 }).observe(sentinel);
   }
 
   const revealObserver = new IntersectionObserver((entries, observer) => {
