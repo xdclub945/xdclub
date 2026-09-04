@@ -10,7 +10,7 @@
     {
       "id": "service-one",
       "index": "01",
-      "eyebrow": "Featured service",
+      "eyebrow": "PROXY SERVICE",
       "title": "XD Proxy",
       "description": "XDCLUB 专属定制服务入口。",
       "action": "访问服务",
@@ -19,7 +19,7 @@
     {
       "id": "service-two",
       "index": "02",
-      "eyebrow": "Reserved service",
+      "eyebrow": "VOICE CHAT",
       "title": "oopz",
       "description": "来这里语音",
       "action": "点这里",
