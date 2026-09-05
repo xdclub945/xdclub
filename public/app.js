@@ -65,6 +65,31 @@ function setText(root, selector, value) {
   }
 }
 
+function setServiceTitle(panel, value, allowHyphenBreak) {
+  if (typeof value !== "string") return;
+
+  const title = panel.querySelector('[data-service-field="title"]');
+  if (!title || !allowHyphenBreak) {
+    if (title) title.textContent = value;
+    return;
+  }
+
+  const breakAt = value.search(/[-‐‑‒–—]/u);
+  if (breakAt < 0 || breakAt >= value.length - 1) {
+    title.textContent = value;
+    return;
+  }
+
+  const document = title.ownerDocument;
+  const first = document.createElement("span");
+  const second = document.createElement("span");
+  first.dataset.titlePart = "first";
+  second.dataset.titlePart = "second";
+  first.textContent = value.slice(0, breakAt + 1);
+  second.textContent = value.slice(breakAt + 1);
+  title.replaceChildren(first, document.createElement("wbr"), second);
+}
+
 function applyService(root, service) {
   if (!service || typeof service.id !== "string") return;
 
@@ -73,7 +98,7 @@ function applyService(root, service) {
 
   setText(panel, '[data-service-field="index"]', service.index);
   setText(panel, '[data-service-field="eyebrow"]', service.eyebrow);
-  setText(panel, '[data-service-field="title"]', service.title);
+  setServiceTitle(panel, service.title, service.id === "service-four");
   setText(panel, '[data-service-field="description"]', service.description);
 
   if (service.preview && typeof service.preview === "object") {
@@ -165,6 +190,10 @@ function setupViewportEffects() {
   };
   syncHeader();
   window.addEventListener("scroll", requestHeaderSync, { passive: true });
+  // Capture document scrolling as well for embedded/desktop browsing contexts
+  // where the scrolling element is not the window itself.
+  document.addEventListener("scroll", requestHeaderSync, { passive: true, capture: true });
+  window.requestAnimationFrame(syncHeader);
 
   for (const link of navLinks) {
     link.addEventListener("click", (event) => {
@@ -178,6 +207,35 @@ function setupViewportEffects() {
         block: target.id === "home" ? "start" : "center",
       });
     });
+  }
+
+  let resizeTimer = 0;
+  const recenterCurrentPanel = () => {
+    const hashId = window.location.hash.slice(1);
+    const activeId = navLinks.find((link) => link.getAttribute("aria-current") === "page")?.hash.slice(1);
+    const targetId = hashId || activeId;
+    const target = targetId ? document.getElementById(targetId) : null;
+    if (!target) return;
+
+    const root = document.documentElement;
+    const previousScrollBehavior = root.style.scrollBehavior;
+    root.style.scrollBehavior = "auto";
+    const targetTop = target.offsetTop - Math.max(0, (window.innerHeight - target.offsetHeight) / 2);
+    window.scrollTo({
+      top: target.id === "home" ? 0 : targetTop,
+      behavior: "auto",
+    });
+    root.style.scrollBehavior = previousScrollBehavior;
+  };
+
+  window.addEventListener("resize", () => {
+    window.clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(recenterCurrentPanel, 120);
+  }, { passive: true });
+
+  if (window.location.hash) {
+    window.requestAnimationFrame(() => window.requestAnimationFrame(recenterCurrentPanel));
+    window.setTimeout(recenterCurrentPanel, 240);
   }
 
   if (!("IntersectionObserver" in window)) {

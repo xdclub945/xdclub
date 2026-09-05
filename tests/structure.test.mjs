@@ -12,12 +12,12 @@ async function readRequired(path) {
   }
 }
 
-test("five ordered full-screen sections keep existing identifiers and append the surprise panel", async () => {
+test("six ordered full-screen sections keep existing identifiers and append the surprise panel", async () => {
   const html = await readRequired("public/index.html");
   const panels = [...html.matchAll(/<section\b[^>]*\bclass="[^"]*\bpanel\b[^"]*"[^>]*\bid="([^"]+)"|<section\b[^>]*\bid="([^"]+)"[^>]*\bclass="[^"]*\bpanel\b[^"]*"/g)]
     .map((match) => match[1] ?? match[2]);
 
-  assert.deepEqual(panels, ["home", "service-one", "service-two", "service-three", "surprise"]);
+  assert.deepEqual(panels, ["home", "service-one", "service-two", "service-three", "service-four", "surprise"]);
   assert.doesNotMatch(html, /(?:id|href|data-service-id)=["']#?custom["']/);
   assert.match(html, /<footer\b/);
   assert.ok(html.indexOf("<footer") > html.indexOf('id="surprise"'));
@@ -80,7 +80,7 @@ test("configuration preserves custom content in the latest service schema", asyn
     titleAccent: "俱乐部",
     description: "专为电竞玩家打造的综合服务站点",
   });
-  assert.deepEqual(config.services.map(({ id }) => id), ["service-one", "service-two", "service-three"]);
+  assert.deepEqual(config.services.map(({ id }) => id), ["service-one", "service-two", "service-three", "service-four"]);
   assert.deepEqual(config.surprise, {
     title: "好东西哦：）",
     button: "背景梦男",
@@ -88,7 +88,7 @@ test("configuration preserves custom content in the latest service schema", asyn
   assert.deepEqual(config.services[0], {
     id: "service-one",
     index: "01",
-    eyebrow: "Featured service",
+    eyebrow: "PROXY SERVICE",
     title: "XD Proxy",
     description: "XDCLUB 专属定制服务入口。",
     action: "访问服务",
@@ -97,7 +97,7 @@ test("configuration preserves custom content in the latest service schema", asyn
   assert.deepEqual(config.services[1], {
     id: "service-two",
     index: "02",
-    eyebrow: "Reserved service",
+    eyebrow: "VOICE CHAT",
     title: "oopz",
     description: "来这里语音",
     action: "点这里",
@@ -111,6 +111,13 @@ test("configuration preserves custom content in the latest service schema", asyn
     label: "服务器地址",
     value: "mc.xdclub.dpdns.org",
   });
+  assert.deepEqual(config.services[3], {
+    id: "service-four",
+    index: "04",
+    eyebrow: "Audio fidelity",
+    title: "High‑Fidelity",
+    description: "忠实还原录音原本的声音，不额外染色失真",
+  });
   assert.equal(config.footer.copyright, "© 2026 XDCLUB");
   assert.equal(config.footer.siteUrl, undefined);
 });
@@ -121,6 +128,8 @@ test("HTML fallback mirrors customized content and secure service actions", asyn
   const serviceTwo = html.slice(html.indexOf('<section id="service-two"'), html.indexOf("</section>", html.indexOf('<section id="service-two"')));
 
   assert.match(html, /data-config="home\.titlePrimary">小丁<\/span>/);
+  assert.match(serviceOne, /data-service-field="eyebrow">PROXY SERVICE<\/p>/);
+  assert.match(serviceTwo, /data-service-field="eyebrow">VOICE CHAT<\/p>/);
   assert.match(html, /data-config="home\.titleAccent">俱乐部<\/span>/);
   assert.match(html, /data-config="home\.description">专为电竞玩家打造的综合服务站点<\/p>/);
   assert.match(serviceOne, /data-service-field="title">XD Proxy<\/h2>/);
@@ -141,22 +150,23 @@ test("branded 404 preserves the customized copy", async () => {
 
 test("service backgrounds use ordered cache-busted local artwork and the footer stays link-free", async () => {
   const html = await readRequired("public/index.html");
-  const versions = new Map([
-    ["service-one", "230e108141ac"],
-    ["service-two", "9072736d5878"],
-    ["service-three", "1459069044dd"],
+  const assets = new Map([
+    ["service-one", ["service-one", "230e108141ac"]],
+    ["service-two", ["service-two", "9072736d5878"]],
+    ["service-three", ["service-three", "1459069044dd"]],
+    ["service-four", ["high-fidelity", "a20300213c27a"]],
   ]);
 
-  for (const service of ["service-one", "service-two", "service-three"]) {
+  for (const service of ["service-one", "service-two", "service-three", "service-four"]) {
     const start = html.indexOf(`<section id="${service}"`);
     const section = html.slice(start, html.indexOf("</section>", start));
-    const version = versions.get(service);
+    const [asset, version] = assets.get(service);
 
     assert.notEqual(start, -1, `${service} section should exist`);
     assert.match(section, /<picture\b[^>]*class="service-art"[^>]*aria-hidden="true"/);
-    assert.match(section, new RegExp(`srcset="/assets/${service}-640\\.jpg\\?v=${version} 640w, /assets/${service}-1024\\.jpg\\?v=${version} 1024w"`));
+    assert.match(section, new RegExp(`srcset="/assets/${asset}-640\\.jpg\\?v=${version} 640w, /assets/${asset}-1024\\.jpg\\?v=${version} 1024w"`));
     assert.match(section, /sizes="\(max-width: 760px\) 100vw, 52vw"/);
-    assert.match(section, new RegExp(`<img\\b[^>]*class="service-oc"[^>]*src="/assets/${service}-1024\\.jpg\\?v=${version}"[^>]*width="1024"[^>]*height="1536"[^>]*alt=""[^>]*loading="lazy"[^>]*decoding="async"`));
+    assert.match(section, new RegExp(`<img\\b[^>]*class="service-oc"[^>]*src="/assets/${asset}-1024\\.jpg\\?v=${version}"[^>]*width="1024"[^>]*height="1536"[^>]*alt=""[^>]*loading="lazy"[^>]*decoding="async"`));
   }
 
   const footer = html.match(/<footer\b[^>]*>([\s\S]*?)<\/footer>/)?.[1] ?? "";
@@ -175,6 +185,22 @@ test("Minecraft preview exposes a configurable address and copy action without a
   assert.match(section, /data-copy-label[^>]*>复制</);
   assert.doesNotMatch(section, /data-service-field="preview-note"|请在 public\/site-config\.json 中修改此处文本|:25565/);
   assert.doesNotMatch(section, /<a\b[^>]*data-service-field="action"/);
+});
+
+test("High-Fidelity panel keeps configurable copy and local badge artwork", async () => {
+  const html = await readRequired("public/index.html");
+  const section = html.slice(html.indexOf('<section id="service-four"'), html.indexOf("</section>", html.indexOf('<section id="service-four"')));
+
+  assert.match(section, /data-service-field="title"><span data-title-part="first">High‑<\/span><wbr><span data-title-part="second">Fidelity<\/span><\/h2>/);
+  assert.match(section, /data-service-field="description">忠实还原录音原本的声音，不额外染色失真<\/p>/);
+  assert.match(section, /class="high-res-badge(?:\s+[^"]+)*"[^>]*src="\/assets\/high-res-audio-640\.png/);
+  assert.match(section, /src="\/assets\/high-res-audio-p2-640\.png/);
+  assert.match(section, /alt="Hi-Res Audio"/);
+  assert.match(section, /alt="我操太HiFi了"/);
+  assert.match(section, /href="https:\/\/music\.apple\.com\/cn\/playlist\/%E8%AF%95%E9%9F%B3\/pl\.u-BNA6vmJt1Exb2e1"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
+  assert.match(section, />无损精选\s*<span/);
+  assert.doesNotMatch(section, /小红书|1015988781/);
+  assert.doesNotMatch(html, /class="section-index"/);
 });
 
 test("manifest, browser chrome and icon use local moon-blue-gray assets", async () => {

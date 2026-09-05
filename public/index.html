@@ -11,8 +11,8 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="manifest" href="/site.webmanifest">
     <script src="/theme-init.js"></script>
-    <link rel="stylesheet" href="/styles.css">
-    <script type="module" src="/app.js"></script>
+    <link rel="stylesheet" href="/styles.css?v=20260904-17">
+    <script type="module" src="/app.js?v=20260904-9"></script>
     <title>XDCLUB · Private Digital Club</title>
   </head>
   <body>
@@ -46,7 +46,8 @@
       <a href="#service-one" aria-label="前往第二屏">02</a>
       <a href="#service-two" aria-label="前往第三屏">03</a>
       <a href="#service-three" aria-label="前往第四屏">04</a>
-      <a href="#surprise" aria-label="前往第五屏">05</a>
+      <a href="#service-four" aria-label="前往第五屏">05</a>
+      <a href="#surprise" aria-label="前往第六屏">06</a>
     </nav>
 
     <main id="main">
@@ -86,8 +87,7 @@
           <img class="service-oc" src="/assets/service-one-1024.jpg?v=230e108141ac" width="1024" height="1536" alt="" loading="lazy" decoding="async">
         </picture>
         <article class="service-content" data-reveal>
-          <p class="eyebrow" data-service-field="eyebrow">Featured service</p>
-          <p class="section-index" aria-hidden="true" data-service-field="index">01</p>
+          <p class="eyebrow" data-service-field="eyebrow">PROXY SERVICE</p>
           <h2 id="service-one-title" class="service-title" data-service-field="title">XD Proxy</h2>
           <p class="service-description" data-service-field="description">XDCLUB 专属定制服务入口。</p>
           <a class="service-link" data-service-field="action" href="https://custom.xdclub.dpdns.org/" target="_blank" rel="noopener noreferrer">访问服务 <span aria-hidden="true">↗</span></a>
@@ -100,8 +100,7 @@
           <img class="service-oc" src="/assets/service-two-1024.jpg?v=9072736d5878" width="1024" height="1536" alt="" loading="lazy" decoding="async">
         </picture>
         <article class="service-content" data-reveal>
-          <p class="eyebrow" data-service-field="eyebrow">Reserved service</p>
-          <p class="section-index" aria-hidden="true" data-service-field="index">02</p>
+          <p class="eyebrow" data-service-field="eyebrow">VOICE CHAT</p>
           <h2 id="service-two-title" class="service-title" data-service-field="title">oopz</h2>
           <p class="service-description" data-service-field="description">来这里语音</p>
           <a class="service-link" data-service-field="action" href="https://oopz.cn/i/By3GmC" target="_blank" rel="noopener noreferrer">点这里 <span aria-hidden="true">↗</span></a>
@@ -115,7 +114,6 @@
         </picture>
         <article class="service-content" data-reveal>
           <p class="eyebrow" data-service-field="eyebrow">Minecraft server</p>
-          <p class="section-index" aria-hidden="true" data-service-field="index">03</p>
           <h2 id="service-three-title" class="service-title" data-service-field="title">Minecraft Server</h2>
           <p class="service-description" data-service-field="description">成员服务器连接信息预览。</p>
           <div class="server-preview" data-service-preview aria-label="Minecraft 服务器信息">
@@ -133,6 +131,27 @@
           </div>
         </article>
 
+      </section>
+
+      <section id="service-four" class="panel panel-service panel-reserved panel-service-four" aria-labelledby="service-four-title" data-service-id="service-four">
+        <picture class="service-art" aria-hidden="true">
+          <source srcset="/assets/high-fidelity-640.jpg?v=a20300213c27a 640w, /assets/high-fidelity-1024.jpg?v=a20300213c27a 1024w" sizes="(max-width: 760px) 100vw, 52vw" type="image/jpeg">
+          <img class="service-oc" src="/assets/high-fidelity-1024.jpg?v=a20300213c27a" width="1024" height="1536" alt="" loading="lazy" decoding="async">
+        </picture>
+        <div class="high-fidelity-card">
+          <article class="service-content high-fidelity-content" data-reveal>
+            <p class="eyebrow" data-service-field="eyebrow">Audio fidelity</p>
+            <h2 id="service-four-title" class="service-title" data-service-field="title"><span data-title-part="first">High‑</span><wbr><span data-title-part="second">Fidelity</span></h2>
+            <p class="service-description" data-service-field="description">忠实还原录音原本的声音，不额外染色失真</p>
+          </article>
+          <div class="high-fidelity-actions">
+            <a class="service-link high-fidelity-trigger" href="https://music.apple.com/cn/playlist/%E8%AF%95%E9%9F%B3/pl.u-BNA6vmJt1Exb2e1" target="_blank" rel="noopener noreferrer">无损精选 <span aria-hidden="true">↗</span></a>
+            <div class="audio-badges" aria-label="HiFi 音频标志">
+              <img class="high-res-badge" src="/assets/high-res-audio-640.png?v=3b16adad-efaf" alt="Hi-Res Audio" width="160" height="160" loading="lazy" decoding="async">
+              <img class="high-res-badge" src="/assets/high-res-audio-p2-640.png?v=bce27c003ab6" alt="我操太HiFi了" width="160" height="160" loading="lazy" decoding="async">
+            </div>
+          </div>
+        </div>
       </section>
 
       <section id="surprise" class="panel panel-service panel-surprise panel-final" aria-labelledby="surprise-title">

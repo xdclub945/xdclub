@@ -35,6 +35,13 @@
         "label": "服务器地址",
         "value": "mc.xdclub.dpdns.org"
       }
+    },
+    {
+      "id": "service-four",
+      "index": "04",
+      "eyebrow": "Audio fidelity",
+      "title": "High‑Fidelity",
+      "description": "忠实还原录音原本的声音，不额外染色失真"
     }
   ],
   "surprise": {

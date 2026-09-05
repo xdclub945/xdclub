@@ -34,6 +34,19 @@ const reviewViewports = new Set([
 const captureReviewScreenshots = process.env.OC_REVIEW_SCREENSHOTS === "1";
 const retiredServiceFragment = ["#", "custom"].join("");
 
+const glassSafeZoneViewports = [
+  { width: 320, height: 568 },
+  { width: 390, height: 844 },
+  { width: 667, height: 375 },
+  { width: 761, height: 900 },
+  { width: 844, height: 390 },
+  { width: 983, height: 680 },
+  { width: 1127, height: 680 },
+  { width: 1420, height: 680 },
+  { width: 1920, height: 1080 },
+  { width: 2560, height: 1080 },
+];
+
 async function floatingHeaderMetrics(page) {
   return page.evaluate(() => {
     const header = document.querySelector(".site-header");
@@ -50,8 +63,250 @@ async function floatingHeaderMetrics(page) {
   });
 }
 
+test("every non-home glass surface stays inside the artwork safe zone", async ({ page }) => {
+  for (const viewport of glassSafeZoneViewports) {
+    await page.setViewportSize(viewport);
+    await page.goto("/#service-one");
+    await page.waitForLoadState("networkidle");
+
+    for (const id of ["service-one", "service-two", "service-three", "service-four", "surprise"]) {
+      await page.evaluate((sectionId) => {
+        const panel = document.getElementById(sectionId);
+        scrollTo({ top: panel.offsetTop, behavior: "instant" });
+      }, id);
+
+      const layout = await page.evaluate((sectionId) => {
+        const panel = document.getElementById(sectionId);
+        const artwork = panel.querySelector(".service-art");
+        const glass = sectionId === "service-four"
+          ? panel.querySelector(".high-fidelity-card")
+          : panel.querySelector(":scope > .service-content");
+        const panelRect = panel.getBoundingClientRect();
+        const artRect = artwork.getBoundingClientRect();
+        const glassRect = glass.getBoundingClientRect();
+        const style = getComputedStyle(glass);
+
+        return {
+          panel: { top: panelRect.top, right: panelRect.right, bottom: panelRect.bottom, left: panelRect.left },
+          artLeft: artRect.left,
+          hasSplitArtwork: artRect.left > panelRect.left + 1,
+          glass: { top: glassRect.top, right: glassRect.right, bottom: glassRect.bottom, left: glassRect.left },
+          background: style.backgroundColor,
+          borderRadius: Number.parseFloat(style.borderRadius),
+        };
+      }, id);
+
+      expect(layout.background, `${id} ${viewport.width}x${viewport.height} has no glass fill`).not.toBe("rgba(0, 0, 0, 0)");
+      expect(layout.borderRadius, `${id} ${viewport.width}x${viewport.height} has no glass radius`).toBeGreaterThanOrEqual(18);
+      expect(layout.glass.left, `${id} ${viewport.width}x${viewport.height} crosses panel left`).toBeGreaterThanOrEqual(layout.panel.left - 1);
+      const safeRight = layout.hasSplitArtwork ? layout.artLeft : layout.panel.right;
+      expect(layout.glass.right, `${id} ${viewport.width}x${viewport.height} crosses artwork blend boundary`).toBeLessThanOrEqual(safeRight + 1);
+      expect(layout.glass.top, `${id} ${viewport.width}x${viewport.height} crosses panel top`).toBeGreaterThanOrEqual(layout.panel.top - 1);
+      expect(layout.glass.bottom, `${id} ${viewport.width}x${viewport.height} crosses panel bottom`).toBeLessThanOrEqual(layout.panel.bottom + 1);
+    }
+  }
+});
+
+test("desktop glass cards share one centered composition and contain all content", async ({ page }) => {
+  for (const viewport of [
+    { width: 761, height: 900 },
+    { width: 983, height: 680 },
+    { width: 1127, height: 680 },
+    { width: 1280, height: 720 },
+    { width: 1420, height: 680 },
+    { width: 1920, height: 1080 },
+    { width: 2560, height: 1080 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/#service-four");
+    await page.waitForLoadState("networkidle");
+
+    const layouts = await page.evaluate(() => {
+      const ids = ["service-one", "service-two", "service-three", "service-four", "surprise"];
+      return ids.map((id) => {
+        const panel = document.getElementById(id);
+        const glass = id === "service-four"
+          ? panel.querySelector(".high-fidelity-card")
+          : panel.querySelector(":scope > .service-content");
+        const rect = glass.getBoundingClientRect();
+        const style = getComputedStyle(glass);
+        const descendants = [...glass.querySelectorAll(".service-title, .service-description, .service-link, .server-preview, .high-fidelity-actions")]
+          .map((node) => {
+            const bounds = node.getBoundingClientRect();
+            return {
+              selector: node.className,
+              left: bounds.left,
+              right: bounds.right,
+              scrollWidth: node.scrollWidth,
+              clientWidth: node.clientWidth,
+            };
+          });
+        const title = panel.querySelector(".service-title");
+        const titleStyle = getComputedStyle(title);
+
+        return {
+          id,
+          glass: {
+            left: rect.left,
+            right: rect.right,
+            width: rect.width,
+            height: rect.height,
+            scrollWidth: glass.scrollWidth,
+            clientWidth: glass.clientWidth,
+          },
+          backgroundImage: style.backgroundImage,
+          backdropFilter: style.backdropFilter || style.webkitBackdropFilter,
+          descendants,
+          title: {
+            family: titleStyle.fontFamily,
+            size: titleStyle.fontSize,
+            spacing: titleStyle.letterSpacing,
+            lineHeight: titleStyle.lineHeight,
+          },
+        };
+      });
+    });
+
+    const compositionRight = Math.min(viewport.width * 0.48, 960);
+    const reference = layouts.find(({ id }) => id === "service-four");
+    for (const layout of layouts) {
+      const leftGap = layout.glass.left;
+      const rightGap = compositionRight - layout.glass.right;
+      expect(Math.abs(leftGap - rightGap), `${layout.id} ${viewport.width}x${viewport.height} is not centered in the safe composition`).toBeLessThanOrEqual(1.5);
+      expect(leftGap, `${layout.id} ${viewport.width}x${viewport.height} needs breathing room`).toBeGreaterThanOrEqual(20);
+      expect(Math.abs(layout.glass.width - reference.glass.width), `${layout.id} glass width differs from page five`).toBeLessThanOrEqual(1.5);
+      expect(Math.abs(layout.glass.height - reference.glass.height), `${layout.id} ${viewport.width}x${viewport.height} glass height differs from page five`).toBeLessThanOrEqual(1.5);
+      expect(layout.glass.scrollWidth, `${layout.id} glass content overflows`).toBeLessThanOrEqual(layout.glass.clientWidth + 1);
+      expect(layout.backgroundImage, `${layout.id} lacks the liquid-glass highlight`).not.toBe("none");
+      expect(layout.backdropFilter, `${layout.id} lacks glass blur`).toContain("blur");
+      expect(layout.title, `${layout.id} title scale differs from page five`).toEqual(reference.title);
+
+      for (const descendant of layout.descendants) {
+        expect(descendant.left, `${layout.id} ${descendant.selector} crosses glass left`).toBeGreaterThanOrEqual(layout.glass.left - 1);
+        expect(descendant.right, `${layout.id} ${descendant.selector} crosses glass right`).toBeLessThanOrEqual(layout.glass.right + 1);
+        expect(descendant.scrollWidth, `${layout.id} ${descendant.selector} text overflows`).toBeLessThanOrEqual(descendant.clientWidth + 1);
+      }
+    }
+  }
+});
+
+test("extreme mobile titles wrap on safe boundaries without overlapping", async ({ page }) => {
+  for (const viewport of [
+    { width: 240, height: 568 },
+    { width: 280, height: 653 },
+    { width: 320, height: 568 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/#service-four");
+    await page.waitForLoadState("networkidle");
+
+    const metrics = await page.locator("#service-four-title").evaluate((title) => {
+      const card = title.closest(".high-fidelity-card");
+      const first = title.querySelector("[data-title-part=first]");
+      const second = title.querySelector("[data-title-part=second]");
+      const titleRect = title.getBoundingClientRect();
+      const cardRect = card.getBoundingClientRect();
+      const style = getComputedStyle(title);
+
+      return {
+        card: { left: cardRect.left, right: cardRect.right, top: cardRect.top, bottom: cardRect.bottom },
+        title: { left: titleRect.left, right: titleRect.right, top: titleRect.top, bottom: titleRect.bottom },
+        lineHeight: Number.parseFloat(style.lineHeight),
+        fontSize: Number.parseFloat(style.fontSize),
+        hasSafeBreak: Boolean(title.querySelector("wbr")),
+        firstTop: first?.getBoundingClientRect().top ?? null,
+        secondTop: second?.getBoundingClientRect().top ?? null,
+      };
+    });
+
+    expect(metrics.hasSafeBreak, `${viewport.width}px title needs an explicit safe break`).toBe(true);
+    expect(metrics.lineHeight, `${viewport.width}px title line-height`).toBeGreaterThanOrEqual(metrics.fontSize);
+    expect(metrics.title.left).toBeGreaterThanOrEqual(metrics.card.left - 1);
+    expect(metrics.title.right).toBeLessThanOrEqual(metrics.card.right + 1);
+    expect(metrics.title.top).toBeGreaterThanOrEqual(metrics.card.top - 1);
+    expect(metrics.title.bottom).toBeLessThanOrEqual(metrics.card.bottom + 1);
+
+    if (viewport.width <= 320) {
+      expect(metrics.secondTop, `${viewport.width}px Fidelity should move to a new line`).toBeGreaterThan(metrics.firstTop + 1);
+    }
+  }
+});
+
+test("selectable title line boxes stay separated at extreme widths", async ({ page }) => {
+  const titleSelectors = [
+    "#home-title",
+    "#service-one-title",
+    "#service-two-title",
+    "#service-three-title",
+    "#service-four-title",
+    "#surprise-title",
+  ];
+
+  for (const viewport of [
+    { width: 240, height: 568 },
+    { width: 280, height: 653 },
+    { width: 320, height: 568 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await page.evaluate(() => document.fonts.ready);
+
+    for (const selector of titleSelectors) {
+      const metrics = await page.locator(selector).evaluate((title) => {
+        const style = getComputedStyle(title);
+        const container = title.closest(".home-copy, .service-content, .high-fidelity-card");
+        const titleRect = title.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        const rawRects = [];
+        const walker = document.createTreeWalker(title, NodeFilter.SHOW_TEXT);
+
+        while (walker.nextNode()) {
+          if (!walker.currentNode.textContent.trim()) continue;
+          const range = document.createRange();
+          range.selectNodeContents(walker.currentNode);
+          rawRects.push(...[...range.getClientRects()].map(({ top, bottom, left, right }) => ({ top, bottom, left, right })));
+        }
+
+        const lines = rawRects
+          .sort((a, b) => a.top - b.top || a.left - b.left)
+          .reduce((groups, rect) => {
+            const current = groups.at(-1);
+            if (current && Math.abs(current.top - rect.top) < 1) {
+              current.top = Math.min(current.top, rect.top);
+              current.bottom = Math.max(current.bottom, rect.bottom);
+              current.left = Math.min(current.left, rect.left);
+              current.right = Math.max(current.right, rect.right);
+            } else {
+              groups.push({ ...rect });
+            }
+            return groups;
+          }, []);
+
+        return {
+          fontSize: Number.parseFloat(style.fontSize),
+          lineHeight: Number.parseFloat(style.lineHeight),
+          title: { left: titleRect.left, right: titleRect.right },
+          container: { left: containerRect.left, right: containerRect.right },
+          lines,
+        };
+      });
+
+      expect(metrics.lineHeight, `${selector} ${viewport.width}px needs a safe selectable line box`).toBeGreaterThanOrEqual(metrics.fontSize * 1.1);
+      expect(metrics.title.left, `${selector} ${viewport.width}px crosses its container left`).toBeGreaterThanOrEqual(metrics.container.left - 1);
+      expect(metrics.title.right, `${selector} ${viewport.width}px crosses its container right`).toBeLessThanOrEqual(metrics.container.right + 1);
+
+      for (let index = 1; index < metrics.lines.length; index += 1) {
+        expect(metrics.lines[index].top, `${selector} ${viewport.width}px selection lines overlap`).toBeGreaterThanOrEqual(metrics.lines[index - 1].bottom);
+      }
+    }
+  }
+});
+
 for (const viewport of viewports) {
-  test(`five-section layout and OC art fit ${viewport.width}x${viewport.height}`, async ({ page }) => {
+  test(`six-section layout and OC art fit ${viewport.width}x${viewport.height}`, async ({ page }) => {
     const runtimeErrors = [];
     page.on("pageerror", (error) => runtimeErrors.push(error.message));
     page.on("console", (message) => {
@@ -66,7 +321,7 @@ for (const viewport of viewports) {
     await expect(page.locator("body")).toHaveCSS("overflow-x", "clip");
 
     expect(response?.status()).toBe(200);
-    await expect(page.locator(".panel")).toHaveCount(5);
+    await expect(page.locator(".panel")).toHaveCount(6);
 
     const layout = await page.evaluate(() => {
       const rect = (selector) => {
@@ -116,6 +371,7 @@ for (const viewport of viewports) {
         { id: "service-one", art: "#service-one .service-art", image: "#service-one .service-oc", content: "#service-one .service-content", paths: ["/assets/service-one-640.jpg", "/assets/service-one-1024.jpg"] },
         { id: "service-two", art: "#service-two .service-art", image: "#service-two .service-oc", content: "#service-two .service-content", paths: ["/assets/service-two-640.jpg", "/assets/service-two-1024.jpg"] },
         { id: "service-three", art: "#service-three .service-art", image: "#service-three .service-oc", content: "#service-three .service-content", paths: ["/assets/service-three-640.jpg", "/assets/service-three-1024.jpg"] },
+        { id: "service-four", art: "#service-four .service-art", image: "#service-four .service-oc", content: "#service-four .service-content", paths: ["/assets/high-fidelity-640.jpg", "/assets/high-fidelity-1024.jpg"] },
         { id: "surprise", art: "#surprise .service-art", image: "#surprise .service-oc", content: "#surprise .service-content", paths: ["/assets/surprise-panel-640.jpg", "/assets/surprise-panel-1024.jpg"] },
       ];
       const overlap = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left))
@@ -156,7 +412,7 @@ for (const viewport of viewports) {
       }));
     });
 
-    expect(artwork).toHaveLength(5);
+    expect(artwork).toHaveLength(6);
     for (const layer of artwork) {
       expect(layer.naturalRatio).toBeCloseTo(2 / 3, 3);
       const currentUrl = new URL(layer.currentSrc);
@@ -182,7 +438,7 @@ for (const viewport of viewports) {
     }
 
     const header = page.locator(".site-header");
-    for (const serviceId of ["service-one", "service-two", "service-three", "surprise"]) {
+    for (const serviceId of ["service-one", "service-two", "service-three", "service-four", "surprise"]) {
       await page.locator(`#${serviceId}`).evaluate((panel) => panel.scrollIntoView({ block: "start" }));
       await expect(header).toHaveClass(/is-floating/);
       await expect.poll(() => header.evaluate((node) => getComputedStyle(node).borderRadius)).toBe("26px");
@@ -421,7 +677,7 @@ test("right-side page controls center each service without enabling scroll snap"
     await page.setViewportSize(viewport);
     await page.goto("/");
 
-    for (const serviceId of ["service-one", "service-two", "service-three", "surprise"]) {
+    for (const serviceId of ["service-one", "service-two", "service-three", "service-four", "surprise"]) {
       await page.locator(`.section-nav a[href="#${serviceId}"]`).click();
       await expect.poll(() => page.evaluate(() => location.hash)).toBe(`#${serviceId}`);
       await expect.poll(() => page.locator(`#${serviceId}`).evaluate((panel) => {
@@ -538,7 +794,7 @@ test("short landscape keeps service titles and primary information in the viewpo
   await page.setViewportSize({ width: 844, height: 390 });
   await page.goto("/");
 
-  for (const serviceId of ["service-one", "service-two", "service-three", "surprise"]) {
+  for (const serviceId of ["service-one", "service-two", "service-three", "service-four", "surprise"]) {
     await page.evaluate((id) => scrollTo({ top: document.querySelector(`#${id}`).offsetTop, behavior: "instant" }), serviceId);
     await expect(page.locator(".site-header")).toHaveClass(/is-floating/);
     const layout = await page.locator(`#${serviceId}`).evaluate((panel) => {
@@ -553,7 +809,7 @@ test("short landscape keeps service titles and primary information in the viewpo
       };
     });
 
-    expect(layout.titleLines).toBeLessThanOrEqual(["service-three", "surprise"].includes(serviceId) ? 2.2 : 1.2);
+    expect(layout.titleLines).toBeLessThanOrEqual(["service-three", "service-four", "surprise"].includes(serviceId) ? 2.2 : 1.2);
     expect(layout.primaryTop).toBeGreaterThanOrEqual(52);
     expect(layout.primaryBottom).toBeLessThanOrEqual(390);
   }
