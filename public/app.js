@@ -183,7 +183,12 @@ function setupViewportEffects() {
   let headerFrame = 0;
   const syncHeader = () => {
     headerFrame = 0;
-    header?.classList.toggle("is-floating", window.scrollY > 20);
+    const scrollTop = Math.max(
+      window.scrollY || 0,
+      document.scrollingElement?.scrollTop || 0,
+      document.documentElement.scrollTop || 0,
+    );
+    header?.classList.toggle("is-floating", scrollTop > 20);
   };
   const requestHeaderSync = () => {
     if (!headerFrame) headerFrame = window.requestAnimationFrame(syncHeader);
@@ -209,7 +214,6 @@ function setupViewportEffects() {
     });
   }
 
-  let resizeTimer = 0;
   const recenterCurrentPanel = () => {
     const hashId = window.location.hash.slice(1);
     const activeId = navLinks.find((link) => link.getAttribute("aria-current") === "page")?.hash.slice(1);
@@ -228,14 +232,11 @@ function setupViewportEffects() {
     root.style.scrollBehavior = previousScrollBehavior;
   };
 
-  window.addEventListener("resize", () => {
-    window.clearTimeout(resizeTimer);
-    resizeTimer = window.setTimeout(recenterCurrentPanel, 120);
-  }, { passive: true });
-
   if (window.location.hash) {
     window.requestAnimationFrame(() => window.requestAnimationFrame(recenterCurrentPanel));
-    window.setTimeout(recenterCurrentPanel, 240);
+    // Browser scroll restoration can run after DOMContentLoaded. Re-center the
+    // requested deep link once after assets load, never on later viewport resizes.
+    window.addEventListener("load", recenterCurrentPanel, { once: true });
   }
 
   if (!("IntersectionObserver" in window)) {

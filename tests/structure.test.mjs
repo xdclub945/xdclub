@@ -320,12 +320,12 @@ test("styles define both themes, free scrolling, service art and accessible moti
   assert.match(css, /overflow-x:\s*(?:clip|hidden)/);
 });
 
-test("floating header uses the 20px-scroll motion contract with opaque and glass surfaces", async () => {
+test("floating header uses the motion contract with opaque and Safari-compatible glass surfaces", async () => {
   const css = await readRequired("public/styles.css");
 
   assert.match(css, /\.site-header\s*\{[^}]*transition:[^}]*border-color\s+700ms\s+cubic-bezier\(0\.16,\s*1,\s*0\.3,\s*1\)/s);
   assert.match(css, /\.site-header\.is-floating\s*\{[^}]*min-height:\s*52px[^}]*border-radius:\s*26px[^}]*background:\s*var\(--surface-solid\)/s);
-  assert.match(css, /@supports\s*\(backdrop-filter:\s*blur\(16px\)\)\s*\{\s*\.site-header\.is-floating\s*\{[^}]*background:\s*var\(--header\)[^}]*backdrop-filter:\s*blur\(18px\)\s+saturate\(125%\)/s);
+  assert.match(css, /@supports\s*\([^{}]*-webkit-backdrop-filter:\s*blur\(16px\)[^{}]*backdrop-filter:\s*blur\(16px\)[^{}]*\)\s*\{\s*\.site-header\.is-floating\s*\{[^}]*background:\s*var\(--header\)[^}]*-webkit-backdrop-filter:\s*blur\(18px\)\s+saturate\(125%\)[^}]*backdrop-filter:\s*blur\(18px\)\s+saturate\(125%\)/s);
 });
 
 test("custom brand updates visible split text and accessible name through safe sinks", async () => {

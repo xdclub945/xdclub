@@ -27,11 +27,13 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "node node_modules/wrangler/bin/wrangler.js dev --port 8787 --ip 127.0.0.1",
+    // This Worker is plain ESM. Skipping the unnecessary bundler prevents
+    // Wrangler's file watcher from rebuilding while Playwright writes results.
+    command: "node node_modules/wrangler/bin/wrangler.js dev --no-bundle --port 8787 --ip 127.0.0.1",
     url: "http://127.0.0.1:8787",
     reuseExistingServer: false,
     timeout: 120_000,
-    stdout: "pipe",
+    stdout: "ignore",
     stderr: "pipe",
     env: {
       WRANGLER_LOG_PATH: "work/wrangler.log",

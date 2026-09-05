@@ -10,6 +10,7 @@
   --bg: #f3f5f8;
   --bg-deep: #e7ebf1;
   --surface: rgba(250, 251, 253, 0.78);
+  --glass-surface: rgba(250, 251, 253, 0.48);
   --surface-solid: #fafbfd;
   --text: #18202b;
   --text-soft: #5f6b7b;
@@ -34,6 +35,7 @@
   --bg: #0d121b;
   --bg-deep: #090e16;
   --surface: rgba(23, 30, 42, 0.72);
+  --glass-surface: rgba(23, 30, 42, 0.42);
   --surface-solid: #171e2a;
   --text: #f0f2f7;
   --text-soft: #aab2c2;
@@ -62,12 +64,14 @@ html {
   scroll-behavior: smooth;
   scroll-padding-top: 0;
   background: var(--bg);
+  overscroll-behavior-y: none;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   overflow-x: clip;
+  overscroll-behavior-y: none;
   background: var(--bg);
   color: var(--text);
   transition: background-color 300ms ease, color 300ms ease;
@@ -122,7 +126,9 @@ svg {
 .site-header {
   position: fixed;
   z-index: 50;
-  inset: 0 0 auto;
+  top: 0;
+  right: auto;
+  left: 50%;
   display: flex;
   min-height: 72px;
   align-items: center;
@@ -135,6 +141,7 @@ svg {
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+  transform: translate3d(-50%, 0, 0);
   transition:
     width 700ms cubic-bezier(0.16, 1, 0.3, 1),
     top 700ms cubic-bezier(0.16, 1, 0.3, 1),
@@ -143,7 +150,8 @@ svg {
     border-color 700ms cubic-bezier(0.16, 1, 0.3, 1),
     border-radius 700ms cubic-bezier(0.16, 1, 0.3, 1),
     background 700ms cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 700ms cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow 700ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .site-header.is-floating {
@@ -157,9 +165,10 @@ svg {
   box-shadow: 0 10px 36px rgba(4, 8, 16, 0.16), inset 0 1px rgba(255, 255, 255, 0.08);
 }
 
-@supports (backdrop-filter: blur(16px)) {
+@supports ((-webkit-backdrop-filter: blur(16px)) or (backdrop-filter: blur(16px))) {
   .site-header.is-floating {
     background: var(--header);
+    -webkit-backdrop-filter: blur(18px) saturate(125%);
     backdrop-filter: blur(18px) saturate(125%);
   }
 }
@@ -226,13 +235,14 @@ svg {
   border-radius: 999px;
   background: var(--surface-solid);
   box-shadow: 0 12px 38px var(--shadow), inset 0 1px rgba(255, 255, 255, 0.08);
-  transform: translateY(-50%);
+  transform: translate3d(0, -50%, 0);
   transition: background-color 300ms ease, border-color 300ms ease, box-shadow 300ms ease;
 }
 
-@supports (backdrop-filter: blur(16px)) {
+@supports ((-webkit-backdrop-filter: blur(16px)) or (backdrop-filter: blur(16px))) {
   .section-nav {
     background: var(--header);
+    -webkit-backdrop-filter: blur(18px) saturate(125%);
     backdrop-filter: blur(18px) saturate(125%);
   }
 }
@@ -364,7 +374,7 @@ main {
   flex-direction: column;
   justify-content: center;
   overflow: hidden;
-  padding: max(104px, 13vh) var(--panel-inline) max(52px, 8vh);
+  padding: max(88px, 10vh) var(--panel-inline);
   scroll-margin-top: 0;
   border-bottom: 1px solid var(--line);
   background:
@@ -503,10 +513,10 @@ main {
 }
 
 .hero-title {
-  --title-line-height: 1.3;
+  --title-line-height: 1.14;
   display: flex;
   flex-direction: column;
-  row-gap: clamp(8px, 1.4vw, 20px);
+  row-gap: clamp(2px, 0.25vw, 4px);
   max-width: 1100px;
   font-size: clamp(3.4rem, 9vw, 9.5rem);
   font-weight: 500;
@@ -629,15 +639,16 @@ main {
   border: 1px solid var(--line);
   border-radius: 28px;
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--surface-solid) 36%, transparent), transparent 46%),
-    color-mix(in srgb, var(--surface) 92%, transparent);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.14), transparent 46%),
+    var(--glass-surface);
   box-shadow: 0 24px 72px var(--shadow), inset 0 1px rgba(255, 255, 255, 0.08);
 }
 
-@supports (backdrop-filter: blur(18px)) {
+@supports ((-webkit-backdrop-filter: blur(18px)) or (backdrop-filter: blur(18px))) {
   .panel-service:not(.panel-service-four) > .service-content,
   .high-fidelity-card {
-    backdrop-filter: blur(26px) saturate(132%) contrast(104%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%) contrast(102%);
+    backdrop-filter: blur(14px) saturate(120%) contrast(102%);
   }
 }
 
@@ -860,19 +871,21 @@ main {
 }
 
 .panel-final {
-  justify-content: space-between;
-  padding-bottom: max(20px, env(safe-area-inset-bottom));
+  justify-content: center;
 }
 
 .panel-final .service-content {
-  margin-block: auto;
+  margin-block: 0;
 }
 
 .site-footer {
-  position: relative;
+  position: absolute;
   z-index: 2;
   display: flex;
-  width: 100%;
+  right: var(--panel-inline);
+  bottom: max(20px, env(safe-area-inset-bottom));
+  left: var(--panel-inline);
+  width: auto;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
@@ -1103,11 +1116,13 @@ main {
     padding: clamp(18px, 5vw, 28px);
     border: 1px solid var(--line);
     border-radius: 18px;
-    background: var(--surface);
+    background: var(--glass-surface);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
+    backdrop-filter: blur(14px) saturate(120%);
   }
 
   .panel-service {
-    justify-content: flex-end;
+    justify-content: center;
   }
 
   .service-art {
@@ -1117,7 +1132,7 @@ main {
   }
 
   .service-art::after {
-    background: linear-gradient(0deg, var(--bg) 2%, color-mix(in srgb, var(--bg) 86%, transparent) 38%, transparent 76%);
+    background: linear-gradient(0deg, color-mix(in srgb, var(--bg) 72%, transparent) 2%, color-mix(in srgb, var(--bg) 48%, transparent) 42%, transparent 78%);
   }
 
   .panel-service:not(.panel-service-four) > .service-content,
@@ -1167,6 +1182,7 @@ main {
   }
 
   .site-header.is-floating {
+    top: max(4px, env(safe-area-inset-top));
     width: calc(100% - 20px);
   }
 
@@ -1179,9 +1195,13 @@ main {
   }
 
   .section-nav {
+    position: fixed;
     right: max(6px, env(safe-area-inset-right));
     gap: 1px;
     padding: 4px;
+    transform: translate3d(0, -50%, 0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
   }
 
   .section-nav a {
@@ -1205,7 +1225,7 @@ main {
 
   .panel {
     --panel-inline: clamp(22px, 7vw, 52px);
-    padding: 92px max(58px, calc(env(safe-area-inset-right) + 54px)) 48px clamp(22px, 7vw, 52px);
+    padding: 72px max(58px, calc(env(safe-area-inset-right) + 54px)) 72px clamp(22px, 7vw, 52px);
     scroll-margin-top: 0;
   }
 
@@ -1220,6 +1240,7 @@ main {
   }
 
   .hero-title {
+    --title-line-height: 1.36;
     font-size: clamp(3rem, 16vw, 6.4rem);
     line-height: var(--title-line-height);
   }
@@ -1270,8 +1291,11 @@ main {
 }
 
 @media (max-width: 360px) {
-  .hero-title,
   .service-title {
+    --title-line-height: 1.4;
+  }
+
+  .hero-title {
     --title-line-height: 1.4;
   }
 

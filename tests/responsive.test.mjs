@@ -668,6 +668,103 @@ test("free scrolling keeps arbitrary service positions stable", async ({ page })
   expect(Math.abs(await page.evaluate(() => scrollY) - target)).toBeLessThanOrEqual(2);
 });
 
+test("iOS-style visual viewport resize does not pull the last section back to an old hash", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/#home");
+  await page.waitForLoadState("networkidle");
+  await page.evaluate(() => scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" }));
+  const before = await page.evaluate(() => ({ top: scrollY, max: document.documentElement.scrollHeight - innerHeight }));
+  expect(before.top).toBeGreaterThanOrEqual(before.max - 2);
+
+  // Mobile Safari fires resize while its address bar collapses/expands.
+  await page.setViewportSize({ width: 390, height: 780 });
+  await page.waitForTimeout(300);
+  const after = await page.evaluate(() => ({ top: scrollY, max: document.documentElement.scrollHeight - innerHeight }));
+
+  expect(after.top).toBeGreaterThanOrEqual(after.max - 80);
+  expect(after.top).toBeGreaterThan(780 * 4);
+});
+
+test("mobile page rail remains fixed while the document scrolls", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+
+  const measure = () => page.locator(".section-nav").evaluate((node) => {
+    const rect = node.getBoundingClientRect();
+    return { top: rect.top, right: innerWidth - rect.right, position: getComputedStyle(node).position };
+  });
+  const before = await measure();
+  await page.evaluate(() => scrollTo({ top: document.querySelector("#service-three").offsetTop + 120, behavior: "instant" }));
+  await page.waitForTimeout(100);
+  const after = await measure();
+
+  expect(after.position).toBe("fixed");
+  expect(Math.abs(after.top - before.top)).toBeLessThanOrEqual(1);
+  expect(Math.abs(after.right - before.right)).toBeLessThanOrEqual(1);
+});
+
+test("service glass uses one centered vertical anchor and preserves artwork visibility", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  for (const viewport of [{ width: 390, height: 844 }, { width: 1366, height: 768 }, { width: 1920, height: 1080 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/#service-one");
+
+    for (const theme of ["light", "dark"]) {
+      await page.evaluate((value) => { document.documentElement.dataset.theme = value; }, theme);
+      for (const id of ["service-one", "service-two", "service-three", "service-four", "surprise"]) {
+        await page.evaluate((sectionId) => {
+          document.getElementById(sectionId).scrollIntoView({ block: "start", behavior: "instant" });
+        }, id);
+        await expect(page.locator(`#${id} [data-reveal]`)).toHaveClass(/is-visible/);
+        const metrics = await page.locator(`#${id}`).evaluate((panel) => {
+          const glass = panel.id === "service-four"
+            ? panel.querySelector(".high-fidelity-card")
+            : panel.querySelector(":scope > .service-content");
+          const panelRect = panel.getBoundingClientRect();
+          const glassRect = glass.getBoundingClientRect();
+          const color = getComputedStyle(glass).backgroundColor;
+          const alphaMatch = color.match(/[\d.]+/g);
+          return {
+            centerDelta: Math.abs((glassRect.top + glassRect.height / 2) - (panelRect.top + panelRect.height / 2)),
+            alpha: alphaMatch?.length >= 4 ? Number(alphaMatch[3]) : 1,
+          };
+        });
+
+        expect(metrics.centerDelta, `${id} ${viewport.width}x${viewport.height} is vertically misaligned`).toBeLessThanOrEqual(14);
+        expect(metrics.alpha, `${id} ${theme} glass obscures the artwork`).toBeLessThanOrEqual(0.64);
+      }
+    }
+  }
+});
+
+test("mobile header stays near the safe top edge and desktop header visibly contracts", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await page.evaluate(() => scrollTo({ top: 40, behavior: "instant" }));
+  await expect(page.locator(".site-header")).toHaveClass(/is-floating/);
+  await expect.poll(() => page.locator(".site-header").evaluate((node) => node.getBoundingClientRect().top)).toBeLessThanOrEqual(6);
+
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
+  await expect(page.locator(".site-header")).not.toHaveClass(/is-floating/);
+  await page.waitForTimeout(750);
+  const expandedWidth = await page.locator(".site-header").evaluate((node) => node.getBoundingClientRect().width);
+  await page.evaluate(() => scrollTo({ top: 80, behavior: "instant" }));
+  await expect(page.locator(".site-header")).toHaveClass(/is-floating/);
+  await page.waitForTimeout(90);
+  const during = await page.locator(".site-header").evaluate((node) => ({
+    width: node.getBoundingClientRect().width,
+    running: node.getAnimations().some((animation) => animation.playState === "running"),
+  }));
+  await page.waitForTimeout(750);
+  const contractedWidth = await page.locator(".site-header").evaluate((node) => node.getBoundingClientRect().width);
+
+  expect(during.running).toBe(true);
+  expect(during.width).toBeLessThan(expandedWidth);
+  expect(during.width).toBeGreaterThan(contractedWidth);
+  expect(contractedWidth).toBeLessThanOrEqual(expandedWidth * 0.86);
+});
+
 test("right-side page controls center each service without enabling scroll snap", async ({ page }) => {
   for (const viewport of [
     { width: 390, height: 844 },
@@ -725,6 +822,7 @@ test("title spacing keeps both home title lines visually separate", async ({ pag
 
   expect(title.lines).toBe(2);
   expect(title.rowGap).toBeGreaterThan(0);
+  expect(title.rowGap).toBeLessThanOrEqual(4);
   expect(title.lineHeight).toBeGreaterThan(0);
 });
 
